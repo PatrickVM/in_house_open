@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 
 export default async function NewItemPage() {
   // Get session to check if user is authenticated
-  const session = await getServerSession(authOptions);
+  const session = (await getServerSession(authOptions as any)) as any;
 
   // Redirect to login if not authenticated
   if (!session?.user) {

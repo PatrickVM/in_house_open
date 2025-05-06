@@ -49,7 +49,7 @@ export const authOptions = {
               user.firstName && user.lastName
                 ? `${user.firstName} ${user.lastName}`
                 : user.email,
-            role: user.role,
+            role: user.role as any,
           };
         } catch (error) {
           console.error("Auth error:", error);
@@ -62,10 +62,10 @@ export const authOptions = {
     signIn: "/login",
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -74,7 +74,7 @@ export const authOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.email = token.email;
@@ -87,7 +87,7 @@ export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-export default NextAuth(authOptions);
+export default NextAuth(authOptions as any);
 
 // Re-export auth helpers for use in client components
-export const { signIn, signOut } = NextAuth(authOptions);
+export const { signIn, signOut } = NextAuth(authOptions as any);

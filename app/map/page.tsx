@@ -11,7 +11,7 @@ async function getMapData() {
     // Get churches
     const churches = await db.user.findMany({
       where: {
-        role: UserRole.CHURCH,
+        role: UserRole.CHURCH as any,
       },
     });
 
@@ -34,7 +34,7 @@ export default async function MapPage() {
   const { churches, items } = await getMapData();
 
   // Get current user
-  const session = await getServerSession(authOptions);
+  const session = (await getServerSession(authOptions as any)) as any;
   const currentUser = session?.user
     ? {
         id: session.user.id as string,

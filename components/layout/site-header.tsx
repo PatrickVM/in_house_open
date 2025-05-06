@@ -31,16 +31,13 @@ import {
   User2Icon,
   MapIcon,
 } from "lucide-react";
+import SignOutButton from "@/components/auth/SignOutButton";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
   const isAdmin = session?.user?.role === "ADMIN";
-
-  const handleSignOut = async () => {
-    await signOut({ redirect: true, redirectTo: "/" });
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -151,8 +148,11 @@ export function SiteHeader() {
                         <Link href="/invite">Invite</Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleSignOut}>
-                        Sign out
+                      <DropdownMenuItem className="p-0 hover:bg-transparent focus:bg-transparent">
+                        <SignOutButton
+                          variant="ghost"
+                          className="w-full justify-start h-8 font-normal"
+                        />
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
