@@ -24,7 +24,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarIcon, HomeIcon, UsersIcon, User2Icon } from "lucide-react";
+import {
+  CalendarIcon,
+  HomeIcon,
+  UsersIcon,
+  User2Icon,
+  MapIcon,
+} from "lucide-react";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -46,6 +52,22 @@ export function SiteHeader() {
         <NavigationMenu className="ml-auto">
           <NavigationMenuList>
             <NavigationMenuItem>
+              <Link href="/map" legacyBehavior passHref>
+                <NavigationMenuLink
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    pathname?.startsWith("/map") && "text-primary"
+                  )}
+                >
+                  <span className="flex items-center">
+                    <MapIcon className="mr-2 h-4 w-4" />
+                    Map
+                  </span>
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+
+            <NavigationMenuItem>
               <Link href="/directory" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                   <span className="flex items-center">
@@ -58,6 +80,19 @@ export function SiteHeader() {
 
             {isAuthenticated ? (
               <>
+                <NavigationMenuItem>
+                  <Link href="/items/new" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        pathname?.startsWith("/items/new") && "text-primary"
+                      )}
+                    >
+                      List Item
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+
                 <NavigationMenuItem>
                   <Link href="/profile" legacyBehavior passHref>
                     <NavigationMenuLink

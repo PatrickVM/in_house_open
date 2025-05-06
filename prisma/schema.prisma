@@ -13,6 +13,13 @@ datasource db {
 enum UserRole {
   USER
   ADMIN
+  CHURCH
+}
+
+enum ItemStatus {
+  AVAILABLE
+  CLAIMED
+  COMPLETED
 }
 
 model User {
@@ -29,6 +36,14 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
+  // Location fields
+  latitude      Float?
+  longitude     Float?
+  address       String?
+  city          String?
+  state         String?
+  zipCode       String?
+  
   // NextAuth.js fields
   emailVerified DateTime?
   image         String?
@@ -42,6 +57,10 @@ model User {
   
   // Invite code relationship
   inviteCode    InviteCode?
+  
+  // Item relationship fields
+  listedItems   Item[]    @relation("ItemOwner")
+  claimedItems  Item[]    @relation("ItemClaimer")
 }
 
 model Account {
@@ -88,4 +107,34 @@ model InviteCode {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   claimed     Boolean   @default(false)
   claimedAt   DateTime?
+}
+
+model Item {
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  category    String
+  
+  // Location fields
+  latitude    Float
+  longitude   Float
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  
+  // Status
+  status      ItemStatus  @default(AVAILABLE)
+  
+  // Timestamps
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  claimedAt   DateTime?
+  completedAt DateTime?
+  
+  // Relationships
+  ownerId     String
+  owner       User        @relation("ItemOwner", fields: [ownerId], references: [id])
+  claimerId   String?
+  claimer     User?       @relation("ItemClaimer", fields: [claimerId], references: [id])
 } 
