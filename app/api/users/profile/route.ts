@@ -28,6 +28,11 @@ const profileUpdateSchema = z.object({
     .string()
     .max(200, "Services must be less than 200 characters")
     .optional(),
+  address: z.string().max(200).optional(),
+  city: z.string().max(100).optional(),
+  state: z.string().max(50).optional(),
+  zipCode: z.string().max(20).optional(),
+  phone: z.string().max(20).optional(),
 });
 
 export async function PUT(req: Request) {
@@ -68,6 +73,11 @@ export async function PUT(req: Request) {
         churchName: data.churchName,
         churchWebsite: data.churchWebsite,
         services: data.services,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        phone: data.phone,
         updatedAt: new Date(),
       },
       select: {
@@ -79,6 +89,11 @@ export async function PUT(req: Request) {
         churchName: true,
         churchWebsite: true,
         services: true,
+        address: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        phone: true,
       },
     });
 

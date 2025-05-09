@@ -30,15 +30,13 @@ export default async function EditProfilePage() {
         others.
       </p>
 
-      <div className="bg-white rounded-lg border p-6 shadow-sm">
+      <div className="rounded-lg border p-6 shadow-sm">
         <ProfileForm user={user} />
       </div>
 
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="font-medium text-blue-800">
-          Why complete your profile?
-        </h3>
-        <ul className="list-disc list-inside mt-2 text-sm text-blue-700 space-y-1">
+      <div className="mt-8 p-4 border border-white-200 rounded-lg">
+        <h3 className="font-medium">Why complete your profile?</h3>
+        <ul className="list-disc list-inside mt-2 text-sm space-y-1">
           <li>Connect with others in the community</li>
           <li>Share your skills and services</li>
           <li>Find people with services you need</li>

@@ -44,6 +44,11 @@ const profileFormSchema = z.object({
     .string()
     .max(200, "Services must be less than 200 characters")
     .optional(),
+  address: z.string().max(200).optional(),
+  city: z.string().max(100).optional(),
+  state: z.string().max(50).optional(),
+  zipCode: z.string().max(20).optional(),
+  phone: z.string().max(20).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -66,6 +71,11 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       churchName: user.churchName || "",
       churchWebsite: user.churchWebsite || "",
       services: user.services || "",
+      address: user.address || "",
+      city: user.city || "",
+      state: user.state || "",
+      zipCode: user.zipCode || "",
+      phone: user.phone || "",
     },
   });
 
@@ -206,6 +216,87 @@ export default function ProfileForm({ user }: ProfileFormProps) {
                   </FormControl>
                   <FormDescription>
                     Comma-separated list of services or skills you can provide.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Location Information</h2>
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Street Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123 Main St" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your City" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>State</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your State" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="zipCode"
+              render={({ field }) => (
+                <FormItem className="mt-4">
+                  <FormLabel>ZIP Code</FormLabel>
+                  <FormControl>
+                    <Input placeholder="12345" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="(123) 456-7890" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Optional: Add a phone number for others to contact you
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

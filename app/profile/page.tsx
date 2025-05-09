@@ -39,6 +39,7 @@ export default async function ProfilePage() {
     user.bio,
     user.churchName,
     user.services,
+    user.address,
   ];
 
   const completedFields = profileFields.filter(Boolean).length;
@@ -53,23 +54,20 @@ export default async function ProfilePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b">
-        <Link className="flex items-center" href="/">
-          <span className="text-xl font-bold">In-House</span>
-        </Link>
+        {/* May change or get rid of later.  */}
         <nav className="ml-auto flex gap-4 items-center">
           <Link
-            href="/directory"
+            href="/profile/edit"
             className="text-sm font-medium hover:underline underline-offset-4"
           >
-            Directory
+            Edit Profile
           </Link>
           <Link
-            href="/profile"
+            href="#"
             className="text-sm font-medium hover:underline underline-offset-4"
           >
-            Profile
+            List Item
           </Link>
-          <SignOutButton />
         </nav>
       </header>
       <main className="flex-1 p-4 md:p-8">
@@ -163,6 +161,34 @@ export default async function ProfilePage() {
                       </p>
                     )}
                   </div>
+
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground mb-2">
+                      LOCATION
+                    </h3>
+                    {user.address || user.city || user.state || user.zipCode ? (
+                      <div className="space-y-1">
+                        {user.address && <div>{user.address}</div>}
+                        {(user.city || user.state || user.zipCode) && (
+                          <div>
+                            {[user.city, user.state, user.zipCode]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground">
+                        No location provided
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground mb-2">
+                      CONTACT
+                    </h3>
+                    <p>{user.phone || "Not provided"}</p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -222,7 +248,14 @@ export default async function ProfilePage() {
                         <span>List your services/skills</span>
                       </li>
                       <li className="flex items-center">
-                        <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
+                        {user.address ||
+                        user.city ||
+                        user.state ||
+                        user.zipCode ? (
+                          <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                        ) : (
+                          <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
+                        )}
                         <span>Add your location</span>
                       </li>
                     </ul>

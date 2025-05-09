@@ -44,6 +44,11 @@ export default async function DirectoryPage() {
       churchName: true,
       churchWebsite: true,
       services: true,
+      address: true,
+      city: true,
+      state: true,
+      zipCode: true,
+      phone: true,
     },
   });
 
@@ -106,6 +111,37 @@ export default async function DirectoryPage() {
               <CardContent className="space-y-4">
                 {user.bio && (
                   <p className="text-sm text-muted-foreground">{user.bio}</p>
+                )}
+
+                {/* Leaving this for reference, will most likely modify and use this to display general area based on longitude and latitude. */}
+                {/* {(user.address || user.city || user.state || user.zipCode) && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      LOCATION
+                    </p>
+                    <div className="text-sm">
+                      {user.address && <p>{user.address}</p>}
+                      {(user.city || user.state || user.zipCode) && (
+                        <p>
+                          {[user.city, user.state, user.zipCode]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )} */}
+
+                {(user.phone || user.email) && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      CONTACT
+                    </p>
+                    <div className="text-sm space-y-1">
+                      {user.phone && <p>{user.phone}</p>}
+                      <p>{user.email}</p>
+                    </div>
+                  </div>
                 )}
 
                 {user.services && (
