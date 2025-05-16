@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { db } from "@/lib/db";
 import MapContainer from "@/components/map/MapContainer";
-import { User, Item, UserRole } from "@/types";
+import { User, Item, UserRole, ItemStatus } from "@/types";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 
@@ -17,7 +17,88 @@ async function getMapData() {
 
     // Since we haven't migrated the database yet, we'll return mock data for now
     // In a production app, this would query actual items
-    const mockItems: Item[] = [];
+    const mockItems: Item[] = [
+      {
+        id: "item-1",
+        title: "Office Chairs (Set of 5)",
+        description:
+          "Slightly used office chairs, ergonomic, black. Good condition.",
+        category: "Furniture",
+        latitude: 38.445, // Near Santa Rosa
+        longitude: -122.72,
+        address: "123 Main St",
+        city: "Santa Rosa",
+        state: "CA",
+        zipCode: "95401",
+        status: ItemStatus.AVAILABLE,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        claimedAt: null,
+        completedAt: null,
+        ownerId: "church-owner-1",
+        claimerId: null,
+        owner: {
+          id: "church-owner-1",
+          churchName: "Community Outreach Church",
+          email: "contact@communityoutreach.org",
+          role: UserRole.CHURCH,
+          // Add other required User fields if necessary, or ensure they are optional
+          // For simplicity, only adding what's likely used in the popup
+        } as User, // Type assertion
+      },
+      {
+        id: "item-2",
+        title: "Children's Books (Box)",
+        description: "A large box of assorted children's books, ages 3-10.",
+        category: "Books",
+        latitude: 38.43, // Different location
+        longitude: -122.7,
+        address: "456 Oak Ave",
+        city: "Rohnert Park",
+        state: "CA",
+        zipCode: "94928",
+        status: ItemStatus.AVAILABLE,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        claimedAt: null,
+        completedAt: null,
+        ownerId: "another-church-2",
+        claimerId: null,
+        owner: {
+          id: "another-church-2",
+          firstName: "Pastor",
+          lastName: "Dave",
+          churchName: "Voyage Church",
+          email: "pastordave@voyagechurch.com",
+          role: UserRole.CHURCH,
+        } as User, // Type assertion
+      },
+      {
+        id: "item-3",
+        title: "Canned Goods (Assorted)",
+        description: "Collection of non-perishable canned food items.",
+        category: "Food",
+        latitude: 38.45,
+        longitude: -122.73,
+        address: null, // Example with no specific address, relying on lat/long
+        city: "Santa Rosa",
+        state: "CA",
+        zipCode: null,
+        status: ItemStatus.AVAILABLE,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        claimedAt: null,
+        completedAt: null,
+        ownerId: "church-owner-1", // Same owner as item 1
+        claimerId: null,
+        owner: {
+          id: "church-owner-1",
+          churchName: "Community Outreach Church",
+          email: "contact@communityoutreach.org",
+          role: UserRole.CHURCH,
+        } as User, // Type assertion
+      },
+    ];
 
     return {
       churches: churches as unknown as User[],

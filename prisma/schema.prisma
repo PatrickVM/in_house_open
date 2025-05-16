@@ -33,10 +33,10 @@ model User {
   accounts      Account[]
   inviteCode    InviteCode?
   claimedItems  Item[]      @relation("ItemClaimer")
-  listedItems   Item[]      @relation("ItemOwner")
   sessions      Session[]
   invitedBy     User?       @relation("UserInvites", fields: [inviterId], references: [id])
   invitees      User[]      @relation("UserInvites")
+  ledChurch     Church?     @relation("LeadContactForChurch")
 }
 
 model Account {
@@ -100,10 +100,10 @@ model Item {
   updatedAt   DateTime   @updatedAt
   claimedAt   DateTime?
   completedAt DateTime?
-  ownerId     String
   claimerId   String?
   claimer     User?      @relation("ItemClaimer", fields: [claimerId], references: [id])
-  owner       User       @relation("ItemOwner", fields: [ownerId], references: [id])
+  churchId    String     // Added: Foreign key to Church
+  church      Church     @relation("ChurchItems", fields: [churchId], references: [id]) // Added: Relation to Church
 }
 
 enum UserRole {
@@ -116,4 +116,29 @@ enum ItemStatus {
   AVAILABLE
   CLAIMED
   COMPLETED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Church {
+  id                  String              @id @default(cuid())
+  name                String
+  leadPastorName      String
+  website             String?
+  address             String
+  city                String
+  state               String
+  zipCode             String
+  latitude            Float?
+  longitude           Float?
+  applicationStatus   ApplicationStatus   @default(PENDING)
+  leadContactId       String              @unique
+  leadContact         User                @relation("LeadContactForChurch", fields: [leadContactId], references: [id])
+  items               Item[]              @relation("ChurchItems") // Added: A church can have many items
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
 }

@@ -39,7 +39,8 @@ export default function LoginPage() {
         toast.error("Login failed. Please check your credentials.");
       } else {
         toast.success("Logged in successfully!");
-        router.push("/dashboard");
+        // TODO: Redirect to the dashboard when completed
+        router.push("/profile");
         router.refresh();
       }
     } catch (error) {
