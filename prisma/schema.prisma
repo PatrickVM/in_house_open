@@ -30,6 +30,7 @@ model User {
   emailVerified DateTime?
   image         String?
   inviterId     String?
+  isActive      Boolean     @default(true)
   accounts      Account[]
   inviteCode    InviteCode?
   claimedItems  Item[]      @relation("ItemClaimer")
@@ -85,25 +86,27 @@ model InviteCode {
 }
 
 model Item {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  category    String
-  latitude    Float
-  longitude   Float
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  status      ItemStatus @default(AVAILABLE)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  claimedAt   DateTime?
-  completedAt DateTime?
-  claimerId   String?
-  claimer     User?      @relation("ItemClaimer", fields: [claimerId], references: [id])
-  churchId    String     // Added: Foreign key to Church
-  church      Church     @relation("ChurchItems", fields: [churchId], references: [id]) // Added: Relation to Church
+  id               String     @id @default(cuid())
+  title            String
+  description      String?
+  category         String
+  latitude         Float
+  longitude        Float
+  address          String?
+  city             String?
+  state            String?
+  zipCode          String?
+  status           ItemStatus @default(AVAILABLE)
+  moderationStatus String     @default("APPROVED")
+  moderationNotes  String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  claimedAt        DateTime?
+  completedAt      DateTime?
+  claimerId        String?
+  claimer          User?      @relation("ItemClaimer", fields: [claimerId], references: [id])
+  churchId         String     // Added: Foreign key to Church
+  church           Church     @relation("ChurchItems", fields: [churchId], references: [id]) // Added: Relation to Church
 }
 
 enum UserRole {
@@ -136,6 +139,7 @@ model Church {
   latitude            Float?
   longitude           Float?
   applicationStatus   ApplicationStatus   @default(PENDING)
+  rejectionReason     String?
   leadContactId       String              @unique
   leadContact         User                @relation("LeadContactForChurch", fields: [leadContactId], references: [id])
   items               Item[]              @relation("ChurchItems") // Added: A church can have many items

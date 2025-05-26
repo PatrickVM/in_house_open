@@ -32,6 +32,32 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
+  // Check if user has an existing church application or is already a church
+  const existingChurchApplication = await db.church.findFirst({
+    where: {
+      leadContactId: user.id,
+    },
+  });
+
+  // Determine church application link behavior
+  const getChurchApplicationStatus = () => {
+    if (user.role === "CHURCH") return "hidden"; // Already approved church
+    if (!existingChurchApplication) return "show"; // No application, show signup link
+
+    switch (existingChurchApplication.applicationStatus) {
+      case "PENDING":
+        return "pending";
+      case "REJECTED":
+        return "rejected";
+      case "APPROVED":
+        return "hidden"; // Approved but role not updated yet
+      default:
+        return "hidden";
+    }
+  };
+
+  const churchApplicationStatus = getChurchApplicationStatus();
+
   // Calculate profile completion percentage
   const profileFields = [
     user.firstName,
@@ -68,6 +94,24 @@ export default async function ProfilePage() {
           >
             List Item
           </Link>
+          {churchApplicationStatus === "show" && (
+            <Link
+              href="/church/apply"
+              className="text-sm font-medium hover:underline underline-offset-4"
+            >
+              Church Application Signup
+            </Link>
+          )}
+          {churchApplicationStatus === "pending" && (
+            <span className="text-sm font-medium text-amber-600">
+              Application Under Review
+            </span>
+          )}
+          {churchApplicationStatus === "rejected" && (
+            <span className="text-sm font-medium text-red-600">
+              Check Email for Details
+            </span>
+          )}
         </nav>
       </header>
       <main className="flex-1 p-4 md:p-8">

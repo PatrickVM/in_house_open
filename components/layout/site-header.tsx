@@ -78,19 +78,6 @@ export function SiteHeader() {
             {isAuthenticated ? (
               <>
                 <NavigationMenuItem>
-                  <Link href="/items/new" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        pathname?.startsWith("/items/new") && "text-primary"
-                      )}
-                    >
-                      List Item
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-
-                <NavigationMenuItem>
                   <Link href="/profile" legacyBehavior passHref>
                     <NavigationMenuLink
                       className={cn(
