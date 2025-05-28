@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication and admin role
@@ -22,6 +22,7 @@ export async function PATCH(
       );
     }
 
+    const resolvedParams = await params;
     const { action, latitude, longitude, rejectionReason } =
       await request.json();
 
@@ -35,7 +36,7 @@ export async function PATCH(
 
     // Find the application
     const application = await db.church.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         leadContact: true,
       },
@@ -86,7 +87,7 @@ export async function PATCH(
       await db.$transaction(async (tx) => {
         // Update church application
         await tx.church.update({
-          where: { id: params.id },
+          where: { id: resolvedParams.id },
           data: {
             applicationStatus: "APPROVED",
             latitude: latitude,
@@ -124,7 +125,7 @@ export async function PATCH(
 
       // Update church application with rejection
       await db.church.update({
-        where: { id: params.id },
+        where: { id: resolvedParams.id },
         data: {
           applicationStatus: "REJECTED",
           rejectionReason: rejectionReason.trim(),
@@ -149,7 +150,7 @@ export async function PATCH(
 // GET method to fetch application details (optional, for future use)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication and admin role
@@ -166,8 +167,9 @@ export async function GET(
       );
     }
 
+    const resolvedParams = await params;
     const application = await db.church.findUnique({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       include: {
         leadContact: {
           select: {
