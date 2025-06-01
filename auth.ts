@@ -7,6 +7,7 @@ import { db } from "./lib/db";
 export enum UserRole {
   USER = "USER",
   ADMIN = "ADMIN",
+  CHURCH = "CHURCH",
 }
 
 export const authOptions = {

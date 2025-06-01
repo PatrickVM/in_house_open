@@ -31,6 +31,12 @@ model User {
   image         String?
   inviterId     String?
   isActive      Boolean     @default(true)
+  
+  // Church membership fields
+  churchId                    String?
+  churchMembershipStatus      ChurchMembershipStatus @default(NONE)
+  churchJoinRequestedAt       DateTime?
+  
   accounts      Account[]
   inviteCode    InviteCode?
   claimedItems  Item[]      @relation("ItemClaimer")
@@ -38,6 +44,11 @@ model User {
   invitedBy     User?       @relation("UserInvites", fields: [inviterId], references: [id])
   invitees      User[]      @relation("UserInvites")
   ledChurch     Church?     @relation("LeadContactForChurch")
+  
+  // Church membership relations
+  church                      Church? @relation("ChurchMembers", fields: [churchId], references: [id])
+  verificationRequests        ChurchVerificationRequest[] @relation("UserVerificationRequests")
+  verificationsMade           ChurchVerificationRequest[] @relation("VerifierUser")
 }
 
 model Account {
@@ -109,6 +120,55 @@ model Item {
   church           Church     @relation("ChurchItems", fields: [churchId], references: [id]) // Added: Relation to Church
 }
 
+model Church {
+  id                  String              @id @default(cuid())
+  name                String
+  leadPastorName      String
+  website             String?
+  address             String
+  city                String
+  state               String
+  zipCode             String
+  latitude            Float?
+  longitude           Float?
+  applicationStatus   ApplicationStatus   @default(PENDING)
+  rejectionReason     String?
+  leadContactId       String              @unique
+  
+  // Verification settings
+  requiresVerification        Boolean     @default(true)
+  minVerificationsRequired    Int         @default(2)
+  
+  leadContact         User                @relation("LeadContactForChurch", fields: [leadContactId], references: [id])
+  items               Item[]              @relation("ChurchItems")
+  
+  // Church membership relations
+  members             User[]              @relation("ChurchMembers")
+  verificationRequests ChurchVerificationRequest[]
+  
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+}
+
+model ChurchVerificationRequest {
+  id                String              @id @default(cuid())
+  userId            String              // User requesting to join
+  churchId          String              // Church they want to join
+  requesterId       String              // User who made the request (usually same as userId)
+  verifierId        String?             // User who verified
+  status            VerificationStatus  @default(PENDING)
+  createdAt         DateTime            @default(now())
+  verifiedAt        DateTime?
+  rejectedAt        DateTime?
+  notes             String?
+  
+  user              User                @relation("UserVerificationRequests", fields: [userId], references: [id])
+  church            Church              @relation(fields: [churchId], references: [id])
+  verifier          User?               @relation("VerifierUser", fields: [verifierId], references: [id])
+  
+  @@unique([userId, churchId])
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -127,22 +187,15 @@ enum ApplicationStatus {
   REJECTED
 }
 
-model Church {
-  id                  String              @id @default(cuid())
-  name                String
-  leadPastorName      String
-  website             String?
-  address             String
-  city                String
-  state               String
-  zipCode             String
-  latitude            Float?
-  longitude           Float?
-  applicationStatus   ApplicationStatus   @default(PENDING)
-  rejectionReason     String?
-  leadContactId       String              @unique
-  leadContact         User                @relation("LeadContactForChurch", fields: [leadContactId], references: [id])
-  items               Item[]              @relation("ChurchItems") // Added: A church can have many items
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+enum ChurchMembershipStatus {
+  NONE
+  REQUESTED
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

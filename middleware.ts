@@ -5,6 +5,8 @@ import type { NextRequest } from "next/server";
 const authRoutes = ["/dashboard"];
 // Routes that require admin access
 const adminRoutes = ["/admin"];
+// Routes that require church access
+const churchRoutes = ["/church"];
 // Routes that don't require authentication
 const publicRoutes = ["/", "/login", "/register"];
 

@@ -6,13 +6,14 @@ import Link from "next/link";
 import { FileText, Eye, Calendar, MapPin, User } from "lucide-react";
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     status?: string;
-  };
+  }>;
 }
 
 export default async function ApplicationsPage({ searchParams }: PageProps) {
-  const statusFilter = searchParams.status;
+  const resolvedSearchParams = await searchParams;
+  const statusFilter = resolvedSearchParams.status;
 
   // Build where clause based on filter
   const whereClause =

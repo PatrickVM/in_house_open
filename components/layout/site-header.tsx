@@ -38,6 +38,7 @@ export function SiteHeader() {
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
   const isAdmin = session?.user?.role === "ADMIN";
+  const isChurch = session?.user?.role === "CHURCH";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -78,6 +79,22 @@ export function SiteHeader() {
             {isAuthenticated ? (
               <>
                 <NavigationMenuItem>
+                  <Link href="/dashboard" legacyBehavior passHref>
+                    <NavigationMenuLink
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        pathname?.startsWith("/dashboard") && "text-primary"
+                      )}
+                    >
+                      <span className="flex items-center">
+                        <HomeIcon className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </span>
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
                   <Link href="/profile" legacyBehavior passHref>
                     <NavigationMenuLink
                       className={cn(
@@ -103,6 +120,22 @@ export function SiteHeader() {
                         )}
                       >
                         Admin
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                )}
+
+                {isChurch && (
+                  <NavigationMenuItem>
+                    <Link href="/church/dashboard" legacyBehavior passHref>
+                      <NavigationMenuLink
+                        className={cn(
+                          navigationMenuTriggerStyle(),
+                          pathname?.startsWith("/church/dashboard") &&
+                            "text-primary"
+                        )}
+                      >
+                        Church Dashboard
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>
