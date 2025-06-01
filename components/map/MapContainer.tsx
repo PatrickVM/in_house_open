@@ -1,57 +1,118 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  MapContainer as LeafletMap,
-  TileLayer,
-  Marker,
-  Popup,
-} from "react-leaflet";
 import { useLeafletInit } from "@/lib/leaflet-setup";
-import { churchIcon, userIcon, availableItemIcon } from "./map-icons";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { User, Item } from "@/types";
+import { Badge } from "@/components/ui/badge";
+
+// Define the church with items type based on our database query
+interface ChurchWithItems {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  latitude: number | null;
+  longitude: number | null;
+  leadContact: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string;
+  };
+  items: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    category: string;
+    status: string;
+    createdAt: Date;
+    claimer: {
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+    } | null;
+  }>;
+}
 
 // Define props interface
 interface MapContainerProps {
-  items: Item[];
-  churches: User[];
-  currentUser?: User | null;
+  churchesWithItems: ChurchWithItems[];
+  currentUser?: {
+    id: string;
+    email: string;
+    role: string;
+  } | null;
   height?: string;
   initialCenter?: [number, number];
   initialZoom?: number;
 }
 
 export default function MapContainer({
-  items = [],
-  churches = [],
+  churchesWithItems = [],
   currentUser = null,
   height = "600px",
-  initialCenter = [38.440429, -122.714055], // Santa Rosa coordinates
-  initialZoom = 12,
+  initialCenter = [30.6324, -87.0397], // Milton, Florida coordinates
+  initialZoom = 4, // Zoom level 4 to show all church locations
 }: MapContainerProps) {
+  // State for dynamic imports
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [mapComponents, setMapComponents] = useState<any>(null);
+  const [icons, setIcons] = useState<any>(null);
+
   // SSR handling for Leaflet
   useLeafletInit();
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    // Dynamic import of all map components and icons
+    const loadMapComponents = async () => {
+      try {
+        // Import react-leaflet components dynamically
+        const [leafletComponents, { createMapIcons }] = await Promise.all([
+          import("react-leaflet"),
+          import("./map-icons"),
+        ]);
+
+        // Create map icons
+        const mapIcons = await createMapIcons();
+
+        setMapComponents({
+          MapContainer: leafletComponents.MapContainer,
+          TileLayer: leafletComponents.TileLayer,
+          Marker: leafletComponents.Marker,
+          Popup: leafletComponents.Popup,
+        });
+
+        setIcons(mapIcons);
+        setIsMapReady(true);
+      } catch (error) {
+        console.error("Failed to load map components:", error);
+      }
+    };
+
+    loadMapComponents();
   }, []);
 
-  // Handle login/authentication requirement for item interaction
+  // Handle item interaction
   const handleItemClick = (itemId: string) => {
     if (!currentUser) {
       // Redirect to login if not logged in
-      // Could also use a modal instead
       window.location.href = `/login?redirect=/items/${itemId}`;
     } else {
-      // Navigate to item detail page
+      // Navigate to item detail page (to be implemented)
       window.location.href = `/items/${itemId}`;
     }
   };
 
-  if (!isMounted) {
+  // Handle church profile link
+  const handleChurchProfileClick = (churchId: string) => {
+    window.location.href = `/churches/${churchId}`;
+  };
+
+  if (!isMapReady || !mapComponents || !icons) {
     // Return placeholder while map loads client-side
     return (
       <div style={{ height, width: "100%", background: "#f0f0f0" }}>
@@ -59,6 +120,9 @@ export default function MapContainer({
       </div>
     );
   }
+
+  const { MapContainer: LeafletMap, TileLayer, Marker, Popup } = mapComponents;
+  const { churchIcon } = icons;
 
   return (
     <LeafletMap
@@ -71,72 +135,107 @@ export default function MapContainer({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* Display churches */}
-      {churches.map((church) =>
+      {/* Display churches with their items */}
+      {churchesWithItems.map((church) =>
         church.latitude && church.longitude ? (
           <Marker
             key={`church-${church.id}`}
             position={[church.latitude, church.longitude]}
             icon={churchIcon}
           >
-            <Popup>
-              <div className="text-center">
-                <h3 className="font-bold">{church.churchName || "Church"}</h3>
-                {church.address && <p>{church.address}</p>}
-                <Link
-                  href={`/profile/${church.id}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  View Profile
-                </Link>
+            <Popup maxWidth={400} className="church-popup">
+              <div className="p-2">
+                <div className="mb-3 border-b pb-2">
+                  <h3 className="font-bold text-lg">{church.name}</h3>
+                  <p className="text-sm text-gray-600">
+                    {church.address}, {church.city}, {church.state}{" "}
+                    {church.zipCode}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => handleChurchProfileClick(church.id)}
+                  >
+                    View Church Profile
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-md">
+                    Available Items ({church.items.length})
+                  </h4>
+
+                  {church.items.length === 0 ? (
+                    <p className="text-sm text-gray-500">No items available</p>
+                  ) : (
+                    <div className="max-h-60 overflow-y-auto space-y-2">
+                      {church.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="border rounded p-2 bg-gray-50"
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <h5 className="font-medium text-sm">
+                              {item.title}
+                            </h5>
+                            <Badge
+                              variant={
+                                item.status === "AVAILABLE"
+                                  ? "default"
+                                  : item.status === "CLAIMED"
+                                  ? "secondary"
+                                  : "outline"
+                              }
+                              className="text-xs"
+                            >
+                              {item.status}
+                            </Badge>
+                          </div>
+
+                          <p className="text-xs text-gray-600 mb-1">
+                            {item.category}
+                          </p>
+
+                          {item.description && (
+                            <p className="text-xs text-gray-700 mb-2 line-clamp-2">
+                              {item.description}
+                            </p>
+                          )}
+
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-500">
+                              Listed by {church.name}
+                            </span>
+
+                            {item.status === "AVAILABLE" && (
+                              <Button
+                                size="sm"
+                                className="text-xs px-2 py-1 h-6"
+                                onClick={() => handleItemClick(item.id)}
+                              >
+                                {currentUser
+                                  ? "View Details"
+                                  : "Sign in to View"}
+                              </Button>
+                            )}
+                          </div>
+
+                          {item.claimer && (
+                            <p className="text-xs text-amber-600 mt-1">
+                              Claimed by {item.claimer.firstName}{" "}
+                              {item.claimer.lastName}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </Popup>
           </Marker>
         ) : null
-      )}
-
-      {/* Display available items */}
-      {items.map((item) => (
-        <Marker
-          key={`item-${item.id}`}
-          position={[item.latitude, item.longitude]}
-          icon={availableItemIcon}
-        >
-          <Popup>
-            <div className="p-2">
-              <h3 className="font-bold">{item.title}</h3>
-              <p className="text-gray-600 text-sm">{item.category}</p>
-              <p className="my-1 text-sm line-clamp-2">{item.description}</p>
-              <p className="text-xs text-gray-500">
-                Listed by:{" "}
-                {item.owner.churchName ||
-                  `${item.owner.firstName} ${item.owner.lastName}`}
-              </p>
-              <Button
-                className="mt-2 w-full"
-                onClick={() => handleItemClick(item.id)}
-                size="sm"
-              >
-                {currentUser ? "View Details" : "Sign in to View"}
-              </Button>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-
-      {/* Display current user if they have location */}
-      {currentUser?.latitude && currentUser?.longitude && (
-        <Marker
-          position={[currentUser.latitude, currentUser.longitude]}
-          icon={userIcon}
-        >
-          <Popup>
-            <div className="text-center">
-              <h3 className="font-bold">Your Location</h3>
-              {currentUser.address && <p>{currentUser.address}</p>}
-            </div>
-          </Popup>
-        </Marker>
       )}
     </LeafletMap>
   );

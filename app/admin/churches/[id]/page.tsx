@@ -19,6 +19,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import ChurchCoordinateEditor from "@/components/admin/ChurchCoordinateEditor";
 
 interface ChurchDetailPageProps {
   params: Promise<{ id: string }>;
@@ -180,17 +181,6 @@ export default async function ChurchDetailPage({
                 </div>
               </div>
 
-              {church.latitude && church.longitude && (
-                <div>
-                  <label className="text-sm font-medium text-gray-400">
-                    Coordinates
-                  </label>
-                  <p className="text-gray-200">
-                    {church.latitude.toFixed(6)}, {church.longitude.toFixed(6)}
-                  </p>
-                </div>
-              )}
-
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="text-sm font-medium text-gray-400">
@@ -294,6 +284,16 @@ export default async function ChurchDetailPage({
 
         {/* Statistics Sidebar */}
         <div className="space-y-6">
+          {/* Church Coordinates Editor */}
+          <ChurchCoordinateEditor
+            church={{
+              id: church.id,
+              name: church.name,
+              latitude: church.latitude,
+              longitude: church.longitude,
+            }}
+          />
+
           {/* Item Statistics */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>

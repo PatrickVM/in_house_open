@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createItemSchema.parse(body);
 
-    // Verify the user is the lead contact for this church
+    // Verify the user is the lead contact for this church and get church coordinates
     const church = await db.church.findFirst({
       where: {
         id: validatedData.churchId,
@@ -42,10 +42,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, we'll use placeholder coordinates
-    // In a real implementation, you'd geocode the address
-    const latitude = 40.7128; // Default to NYC coordinates
-    const longitude = -74.006;
+    // Use church coordinates as default for the item
+    // Phase 2: Implement geocoding service for address-to-coordinate conversion
+    const latitude = church.latitude || 38.440429; // Fallback to Santa Rosa if church has no coordinates
+    const longitude = church.longitude || -122.714055;
 
     // Create the item
     const item = await db.item.create({

@@ -5,18 +5,28 @@ import { useEffect } from "react";
 
 export function useLeafletInit() {
   useEffect(() => {
-    // Dynamically import Leaflet CSS in the client
-    require("leaflet/dist/leaflet.css");
+    const initializeLeaflet = async () => {
+      try {
+        // Import Leaflet CSS using require (CSS imports work better with require)
+        require("leaflet/dist/leaflet.css");
 
-    // Fix for default icon images in Leaflet with Webpack/Next.js
-    const L = require("leaflet");
+        // Dynamic import of Leaflet library
+        const L = await import("leaflet");
 
-    delete L.Icon.Default.prototype._getIconUrl;
+        // Fix for default icon images in Leaflet with Webpack/Next.js
+        // @ts-ignore - This is a known Leaflet workaround
+        delete L.default.Icon.Default.prototype._getIconUrl;
 
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: "/leaflet/marker-icon-2x.png",
-      iconUrl: "/leaflet/marker-icon.png",
-      shadowUrl: "/leaflet/marker-shadow.png",
-    });
+        L.default.Icon.Default.mergeOptions({
+          iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+          iconUrl: "/leaflet/marker-icon.png",
+          shadowUrl: "/leaflet/marker-shadow.png",
+        });
+      } catch (error) {
+        console.error("Failed to initialize Leaflet:", error);
+      }
+    };
+
+    initializeLeaflet();
   }, []);
 }
