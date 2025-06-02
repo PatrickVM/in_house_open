@@ -55,8 +55,8 @@ export default function MapContainer({
   churchesWithItems = [],
   currentUser = null,
   height = "600px",
-  initialCenter = [30.6324, -87.0397], // Milton, Florida coordinates
-  initialZoom = 4, // Zoom level 4 to show all church locations
+  initialCenter = [30.5, -89.0], // Center between Louisiana and Florida panhandle
+  initialZoom = 7, // Broader zoom level to show southeastern states
 }: MapContainerProps) {
   // State for dynamic imports
   const [isMapReady, setIsMapReady] = useState(false);
