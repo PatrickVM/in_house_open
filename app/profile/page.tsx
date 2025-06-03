@@ -88,12 +88,13 @@ export default async function ProfilePage() {
           >
             Edit Profile
           </Link>
-          <Link
+          {/* will initialize in phase 2 */}
+          {/* <Link
             href="#"
             className="text-sm font-medium hover:underline underline-offset-4"
           >
             List Item
-          </Link>
+          </Link> */}
           {churchApplicationStatus === "show" && (
             <Link
               href="/church/apply"

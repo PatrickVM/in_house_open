@@ -18,12 +18,6 @@ export function SiteFooter() {
           >
             Directory
           </Link>
-          <Link
-            href="/login"
-            className="text-sm text-muted-foreground hover:underline underline-offset-4"
-          >
-            Login
-          </Link>
         </div>
       </div>
     </footer>

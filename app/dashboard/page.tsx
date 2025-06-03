@@ -108,9 +108,9 @@ export default async function UserDashboard() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">
+    <div className="container mx-auto px-4 py-6 md:py-8 max-w-6xl">
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Welcome back, {user.firstName || user.email}!
         </h1>
         <p className="text-muted-foreground mt-2">
@@ -118,18 +118,18 @@ export default async function UserDashboard() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Getting Started Section */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           {/* Getting Started Card */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5" />
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
                   Getting Started
                 </CardTitle>
-                <Badge variant="outline">
+                <Badge variant="outline" className="text-xs md:text-sm">
                   {completedChecklist}/{checklistItems.length} Complete
                 </Badge>
               </div>
@@ -146,26 +146,33 @@ export default async function UserDashboard() {
                 {checklistItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between p-3 rounded-lg border"
+                    className="flex items-start md:items-center justify-between p-3 rounded-lg border gap-3"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-start md:items-center gap-3 min-w-0 flex-1">
                       {item.completed ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 flex-shrink-0 mt-0.5 md:mt-0" />
                       ) : (
-                        <Circle className="w-5 h-5 text-muted-foreground" />
+                        <Circle className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0 mt-0.5 md:mt-0" />
                       )}
-                      <div>
-                        <h4 className="font-medium">{item.title}</h4>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0">
+                        <h4 className="font-medium text-sm md:text-base">
+                          {item.title}
+                        </h4>
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           {item.description}
                         </p>
                       </div>
                     </div>
                     {!item.completed && (
-                      <Button asChild size="sm" variant="outline">
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="flex-shrink-0"
+                      >
                         <Link href={item.href}>
-                          Start
-                          <ArrowRight className="w-4 h-4 ml-1" />
+                          <span className="hidden sm:inline">Start</span>
+                          <ArrowRight className="w-4 h-4 sm:ml-1" />
                         </Link>
                       </Button>
                     )}
@@ -178,87 +185,80 @@ export default async function UserDashboard() {
           {/* Church Status Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Church className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Church className="w-4 h-4 md:w-5 md:h-5" />
                 Church Community
               </CardTitle>
             </CardHeader>
             <CardContent>
               {hasChurch ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{user.church?.name}</h4>
-                      <p className="text-sm text-muted-foreground">
+                  <div className="flex items-start md:items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-sm md:text-base">
+                        {user.church?.name}
+                      </h4>
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         Pastor: {user.church?.leadPastorName}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs md:text-sm text-muted-foreground">
                         {user.church?.city}, {user.church?.state}
                       </p>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">
+                    <Badge className="bg-green-100 text-green-800 flex-shrink-0">
                       <CheckCircle className="w-3 h-3 mr-1" />
-                      Member
+                      Verified
                     </Badge>
                   </div>
-                  <div className="flex gap-2">
-                    <Button asChild size="sm" variant="outline">
-                      <Link href="/church/dashboard">Church Dashboard</Link>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/items">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Browse Items
+                      </Link>
                     </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href="/dashboard/church-members">View Members</Link>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/directory">
+                        <Users className="w-4 h-4 mr-2" />
+                        View Directory
+                      </Link>
                     </Button>
                   </div>
                 </div>
               ) : hasPendingRequest ? (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-amber-500" />
-                    <span className="text-sm">
-                      You have a pending church membership request
-                    </span>
-                  </div>
-                  {user.verificationRequests.length > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      Pending verification for:{" "}
-                      {user.verificationRequests[0].church.name}
-                    </div>
-                  )}
-                  <Button asChild size="sm" variant="outline">
-                    <Link href="/dashboard/church-status">View Status</Link>
-                  </Button>
-                </div>
-              ) : wasRejected ? (
-                <div className="space-y-4">
-                  <div className="text-sm text-red-600">
-                    Your recent church membership request was not approved.
-                  </div>
-                  <Button asChild size="sm">
-                    <Link href="/dashboard/churches">
-                      <Plus className="w-4 h-4 mr-1" />
-                      Find Another Church
-                    </Link>
-                  </Button>
+                <div className="text-center py-6">
+                  <Clock className="w-8 h-8 md:w-12 md:h-12 text-amber-500 mx-auto mb-3" />
+                  <h4 className="font-medium text-sm md:text-base mb-2">
+                    Verification Pending
+                  </h4>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-4">
+                    Your church membership request is being reviewed
+                  </p>
+                  {user.verificationRequests.map((request) => (
+                    <Badge
+                      key={request.id}
+                      variant="outline"
+                      className="text-amber-600 border-amber-200"
+                    >
+                      Pending at {request.church.name}
+                    </Badge>
+                  ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Connect with a local church community to get started.
+                <div className="text-center py-6">
+                  <Church className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground mx-auto mb-3" />
+                  <h4 className="font-medium text-sm md:text-base mb-2">
+                    Join a Church Community
+                  </h4>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-4">
+                    Connect with a local church to access community resources
                   </p>
-                  <div className="flex gap-2">
-                    <Button asChild size="sm">
-                      <Link href="/dashboard/churches">
-                        <Church className="w-4 h-4 mr-1" />
-                        Browse Churches
-                      </Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href="/church/apply">
-                        <Plus className="w-4 h-4 mr-1" />
-                        Invite Church
-                      </Link>
-                    </Button>
-                  </div>
+                  <Button asChild size="sm">
+                    <Link href="/dashboard/churches">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Find Churches
+                    </Link>
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -270,17 +270,16 @@ export default async function UserDashboard() {
           {/* Profile Completion */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5" />
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <User className="w-4 h-4 md:w-5 md:h-5" />
                 Profile
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-medium">
-                    {profileCompletion}% complete
-                  </span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Completion</span>
+                  <span className="font-medium">{profileCompletion}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
@@ -289,8 +288,11 @@ export default async function UserDashboard() {
                   />
                 </div>
               </div>
-              <Button asChild size="sm" variant="outline" className="w-full">
-                <Link href="/profile/edit">Update Profile</Link>
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link href="/profile/edit">
+                  <User className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -298,44 +300,44 @@ export default async function UserDashboard() {
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle className="text-base md:text-lg">
+                Quick Actions
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-3">
               <Button
                 asChild
-                size="sm"
                 variant="outline"
-                className="w-full justify-start"
-              >
-                <Link href="/directory">
-                  <Users className="w-4 h-4 mr-2" />
-                  Browse Directory
-                </Link>
-              </Button>
-              <Button
-                asChild
                 size="sm"
-                variant="outline"
                 className="w-full justify-start"
               >
                 <Link href="/items">
                   <MapPin className="w-4 h-4 mr-2" />
-                  Find Items
+                  Browse Items
                 </Link>
               </Button>
-              {hasChurch && (
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <Link href="/church/dashboard/items/new">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Share Item
-                  </Link>
-                </Button>
-              )}
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <Link href="/directory">
+                  <Users className="w-4 h-4 mr-2" />
+                  Community Directory
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
+                <Link href="/map">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Explore Map
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </div>

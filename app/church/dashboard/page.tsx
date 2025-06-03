@@ -1,20 +1,20 @@
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
-import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { db } from "@/lib/db";
 import {
-  Package,
-  Users,
   CheckCircle,
+  Circle,
   Clock,
   MessageSquare,
-  MapPin,
+  Package,
   Plus,
+  Users,
 } from "lucide-react";
+import { getServerSession } from "next-auth";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function ChurchDashboard() {
   const session = await getServerSession(authOptions);
@@ -29,108 +29,84 @@ export default async function ChurchDashboard() {
       leadContactId: session.user.id,
       applicationStatus: "APPROVED",
     },
-    include: {
-      items: {
-        include: {
-          claimer: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
   });
 
   if (!church) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Church Dashboard
-          </h1>
-          <p className="text-muted-foreground">
-            No approved church found for your account
-          </p>
-        </div>
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <h3 className="text-lg font-medium mb-2">Church Not Found</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              You don't have an approved church application associated with your
-              account.
-            </p>
-            <Button asChild>
-              <Link href="/church/apply">Apply for Church Status</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    redirect("/church/register");
   }
 
-  // Calculate statistics
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  // Get church items statistics
+  const [
+    totalItems,
+    availableItems,
+    claimedItems,
+    completedItems,
+    pendingItems,
+  ] = await Promise.all([
+    db.item.count({
+      where: { churchId: church.id },
+    }),
+    db.item.count({
+      where: { churchId: church.id, status: "AVAILABLE" },
+    }),
+    db.item.count({
+      where: { churchId: church.id, status: "CLAIMED" },
+    }),
+    db.item.count({
+      where: { churchId: church.id, status: "COMPLETED" },
+    }),
+    db.item.count({
+      where: { churchId: church.id, moderationStatus: "PENDING" },
+    }),
+  ]);
+
+  // Get recent items
+  const recentItems = await db.item.findMany({
+    where: { churchId: church.id },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      status: true,
+      createdAt: true,
+    },
+  });
 
   const stats = {
-    totalItems: church.items.length,
-    availableItems: church.items.filter((item) => item.status === "AVAILABLE")
-      .length,
-    claimedItems: church.items.filter((item) => item.status === "CLAIMED")
-      .length,
-    completedItems: church.items.filter((item) => item.status === "COMPLETED")
-      .length,
-    recentItems: church.items.filter((item) => item.createdAt >= thirtyDaysAgo)
-      .length,
-    approvedItems: church.items.filter(
-      (item) => item.moderationStatus === "APPROVED"
-    ).length,
-    pendingItems: church.items.filter(
-      (item) => item.moderationStatus === "PENDING"
-    ).length,
+    totalItems,
+    availableItems,
+    claimedItems,
+    completedItems,
+    pendingItems,
   };
-
-  // Get recent activity
-  const recentItems = church.items.slice(0, 5);
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Welcome back, {church.name}
-          </h1>
-          <p className="text-muted-foreground">
-            Here's what's happening with your church community
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/church/dashboard/items/new">
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Item
-          </Link>
-        </Button>
+      {/* Welcome Section */}
+      <div className="space-y-2">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+          Welcome back!
+        </h1>
+        <p className="text-muted-foreground">
+          Here's an overview of your church's community impact
+        </p>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats Grid - Mobile: 2 cols, Tablet: 2 cols, Desktop: 4 cols */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         <StatCard
           title="Total Items"
           value={stats.totalItems}
           icon={Package}
-          trend={`+${stats.recentItems} this month`}
-          trendColor="text-green-600"
+          trend="All time"
+          trendColor="text-blue-600"
         />
         <StatCard
-          title="Available Items"
+          title="Available"
           value={stats.availableItems}
-          icon={Clock}
+          icon={Circle}
           trend="Ready to be claimed"
           trendColor="text-blue-600"
         />
@@ -151,54 +127,50 @@ export default async function ChurchDashboard() {
       </div>
 
       {/* Item Status Breakdown & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Package className="w-5 h-5 mr-2" />
+            <CardTitle className="flex items-center text-base md:text-lg">
+              <Package className="w-4 h-4 md:w-5 md:h-5 mr-2" />
               Item Status Overview
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  Approved & Available
-                </span>
-                <Badge
-                  variant="outline"
-                  className="text-green-600 border-green-200"
-                >
-                  {stats.availableItems}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Claimed</span>
-                <Badge
-                  variant="outline"
-                  className="text-amber-600 border-amber-200"
-                >
-                  {stats.claimedItems}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Completed</span>
-                <Badge
-                  variant="outline"
-                  className="text-green-600 border-green-200"
-                >
-                  {stats.completedItems}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Pending Approval</span>
-                <Badge
-                  variant="outline"
-                  className="text-blue-600 border-blue-200"
-                >
-                  {stats.pendingItems}
-                </Badge>
-              </div>
+          <CardContent className="space-y-3 md:space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Approved & Available</span>
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-200"
+              >
+                {stats.availableItems}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Claimed</span>
+              <Badge
+                variant="outline"
+                className="text-amber-600 border-amber-200"
+              >
+                {stats.claimedItems}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Completed</span>
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-200"
+              >
+                {stats.completedItems}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Pending Approval</span>
+              <Badge
+                variant="outline"
+                className="text-blue-600 border-blue-200"
+              >
+                {stats.pendingItems}
+              </Badge>
             </div>
           </CardContent>
         </Card>
@@ -206,26 +178,28 @@ export default async function ChurchDashboard() {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Clock className="w-5 h-5 mr-2" />
+            <CardTitle className="flex items-center text-base md:text-lg">
+              <Clock className="w-4 h-4 md:w-5 md:h-5 mr-2" />
               Recent Items
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {recentItems.length > 0 ? (
                 recentItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between"
+                    className="flex items-start md:items-center justify-between gap-2"
                   >
-                    <div>
-                      <p className="text-sm font-medium">{item.title}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {item.title}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {item.category} • {item.createdAt.toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="flex-shrink-0">
                       <Badge
                         variant="outline"
                         className={
@@ -242,9 +216,11 @@ export default async function ChurchDashboard() {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4">
-                  <p className="text-sm text-muted-foreground">No items yet</p>
-                  <Button asChild size="sm" className="mt-2">
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    No items yet
+                  </p>
+                  <Button asChild size="sm">
                     <Link href="/church/dashboard/items/new">
                       Create your first item
                     </Link>
@@ -259,40 +235,42 @@ export default async function ChurchDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+          <CardTitle className="text-base md:text-lg">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Link
               href="/church/dashboard/items/new"
-              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group"
             >
-              <Plus className="w-8 h-8 text-green-600 mb-2" />
-              <h3 className="font-medium">Add New Item</h3>
-              <p className="text-sm text-muted-foreground">
+              <Plus className="w-6 h-6 md:w-8 md:h-8 text-green-600 mb-2 group-hover:scale-105 transition-transform" />
+              <h3 className="font-medium text-sm md:text-base">Add New Item</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
                 Share resources with your community
               </p>
-            </a>
-            <a
+            </Link>
+            <Link
               href="/church/dashboard/items"
-              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group"
             >
-              <Package className="w-8 h-8 text-blue-600 mb-2" />
-              <h3 className="font-medium">Manage Items</h3>
-              <p className="text-sm text-muted-foreground">
+              <Package className="w-6 h-6 md:w-8 md:h-8 text-blue-600 mb-2 group-hover:scale-105 transition-transform" />
+              <h3 className="font-medium text-sm md:text-base">Manage Items</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
                 {stats.totalItems} items to manage
               </p>
-            </a>
-            <a
+            </Link>
+            <Link
               href="/church/dashboard/messages"
-              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors"
+              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group sm:col-span-2 lg:col-span-1"
             >
-              <MessageSquare className="w-8 h-8 text-purple-600 mb-2" />
-              <h3 className="font-medium">Daily Messages</h3>
-              <p className="text-sm text-muted-foreground">
+              <MessageSquare className="w-6 h-6 md:w-8 md:h-8 text-purple-600 mb-2 group-hover:scale-105 transition-transform" />
+              <h3 className="font-medium text-sm md:text-base">
+                Daily Messages
+              </h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
                 Broadcast to your community
               </p>
-            </a>
+            </Link>
           </div>
         </CardContent>
       </Card>
@@ -315,16 +293,20 @@ function StatCard({
 }) {
   return (
     <Card>
-      <CardContent className="p-6">
+      <CardContent className="p-3 md:p-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold text-foreground">{value}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs md:text-sm font-medium text-muted-foreground truncate">
+              {title}
+            </p>
+            <p className="text-lg md:text-2xl font-bold text-foreground">
+              {value}
+            </p>
           </div>
-          <Icon className="w-8 h-8 text-muted-foreground" />
+          <Icon className="w-6 h-6 md:w-8 md:h-8 text-muted-foreground flex-shrink-0" />
         </div>
-        <div className="mt-4">
-          <p className={`text-sm ${trendColor}`}>{trend}</p>
+        <div className="mt-2 md:mt-4">
+          <p className={`text-xs md:text-sm ${trendColor} truncate`}>{trend}</p>
         </div>
       </CardContent>
     </Card>
