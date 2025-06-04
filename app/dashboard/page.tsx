@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { calculateProfileCompletion } from "@/lib/profile-completion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   ArrowRight,
   Plus,
   Clock,
+  AlertCircle,
 } from "lucide-react";
 
 export default async function UserDashboard() {
@@ -57,18 +59,8 @@ export default async function UserDashboard() {
     redirect("/login");
   }
 
-  // Calculate profile completion
-  const profileFields = [
-    user.firstName,
-    user.lastName,
-    user.bio,
-    user.services,
-    user.address,
-    user.phone,
-  ];
-  const completedFields = profileFields.filter(Boolean).length;
-  const totalFields = profileFields.length;
-  const profileCompletion = Math.round((completedFields / totalFields) * 100);
+  // Calculate profile completion using standardized utility
+  const { completionPercentage } = calculateProfileCompletion(user);
 
   // Check church status
   const hasChurch = user.churchMembershipStatus === "VERIFIED" && user.church;
@@ -81,7 +73,7 @@ export default async function UserDashboard() {
       id: "profile",
       title: "Complete your profile",
       description: "Add your personal information and skills",
-      completed: profileCompletion >= 80,
+      completed: completionPercentage >= 80,
       href: "/profile/edit",
     },
     {
@@ -95,8 +87,8 @@ export default async function UserDashboard() {
       id: "explore",
       title: "Explore the community",
       description: "Browse available items and services",
-      completed: false, // This could be based on user activity
-      href: "/items",
+      completed: hasChurch,
+      href: "/directory",
     },
   ];
 
@@ -212,7 +204,7 @@ export default async function UserDashboard() {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Button asChild variant="outline" size="sm">
-                      <Link href="/items">
+                      <Link href="/directory">
                         <MapPin className="w-4 h-4 mr-2" />
                         Browse Items
                       </Link>
@@ -279,12 +271,12 @@ export default async function UserDashboard() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Completion</span>
-                  <span className="font-medium">{profileCompletion}%</span>
+                  <span className="font-medium">{completionPercentage}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div
                     className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${profileCompletion}%` }}
+                    style={{ width: `${completionPercentage}%` }}
                   />
                 </div>
               </div>
@@ -311,7 +303,7 @@ export default async function UserDashboard() {
                 size="sm"
                 className="w-full justify-start"
               >
-                <Link href="/items">
+                <Link href="/directory">
                   <MapPin className="w-4 h-4 mr-2" />
                   Browse Items
                 </Link>

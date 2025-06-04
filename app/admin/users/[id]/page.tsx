@@ -1,22 +1,23 @@
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
-import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { db } from "@/lib/db";
+import { calculateProfileCompletion } from "@/lib/profile-completion";
 import {
+  Activity,
   ArrowLeft,
-  User,
-  Mail,
-  Phone,
-  MapPin,
   Building2,
   Calendar,
+  Mail,
+  MapPin,
+  Phone,
   Settings,
-  Activity,
+  User,
 } from "lucide-react";
-import { db } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import UserActions from "./UserActions";
 
 interface UserDetailPageProps {
@@ -64,22 +65,9 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
     notFound();
   }
 
-  // Calculate profile completion
-  const profileFields = [
-    user.firstName,
-    user.lastName,
-    user.bio,
-    user.churchName,
-    user.services,
-    user.address,
-    user.phone,
-  ];
-  const filledFields = profileFields.filter(
-    (field) => field && field.trim() !== ""
-  ).length;
-  const completionPercentage = Math.round(
-    (filledFields / profileFields.length) * 100
-  );
+  // Calculate profile completion using standardized utility
+  const { completionPercentage, missingFields } =
+    calculateProfileCompletion(user);
 
   return (
     <div className="space-y-6">

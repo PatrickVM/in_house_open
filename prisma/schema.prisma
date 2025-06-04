@@ -36,6 +36,7 @@ model User {
   churchId                    String?
   churchMembershipStatus      ChurchMembershipStatus @default(NONE)
   churchJoinRequestedAt       DateTime?
+  verifiedAt                  DateTime?              // When user became verified church member
   
   accounts      Account[]
   inviteCode    InviteCode?
@@ -161,6 +162,7 @@ model ChurchVerificationRequest {
   verifiedAt        DateTime?
   rejectedAt        DateTime?
   notes             String?
+  memberNotes       String?             // Added: Member verification notes
   
   user              User                @relation("UserVerificationRequests", fields: [userId], references: [id])
   church            Church              @relation(fields: [churchId], references: [id])

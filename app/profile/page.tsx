@@ -10,9 +10,12 @@ import {
   CheckCircleIcon,
   CircleIcon,
   User2Icon,
+  MapPinIcon,
+  PhoneIcon,
 } from "lucide-react";
 import SignOutButton from "@/components/auth/SignOutButton";
 import { authOptions } from "@/auth";
+import { calculateProfileCompletion } from "@/lib/profile-completion";
 
 export default async function ProfilePage() {
   // Get session to check if user is authenticated
@@ -23,9 +26,19 @@ export default async function ProfilePage() {
     redirect("/login?callbackUrl=/profile");
   }
 
-  // Get full user data from database
+  // Get full user data from database including church relationship
   const user = await db.user.findUnique({
     where: { id: session.user.id as string },
+    include: {
+      church: {
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          state: true,
+        },
+      },
+    },
   });
 
   if (!user) {
@@ -58,24 +71,12 @@ export default async function ProfilePage() {
 
   const churchApplicationStatus = getChurchApplicationStatus();
 
-  // Calculate profile completion percentage
-  const profileFields = [
-    user.firstName,
-    user.lastName,
-    user.bio,
-    user.churchName,
-    user.services,
-    user.address,
-  ];
-
-  const completedFields = profileFields.filter(Boolean).length;
-  const totalFields = profileFields.length;
-  const completionPercentage = Math.round(
-    (completedFields / totalFields) * 100
-  );
+  // Calculate profile completion percentage using standardized utility
+  const { completionPercentage, missingFields } =
+    calculateProfileCompletion(user);
 
   // Check if profile is complete enough to show in directory
-  const isProfileComplete = completionPercentage >= 50;
+  const isProfileComplete = completionPercentage >= 80;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -175,7 +176,30 @@ export default async function ProfilePage() {
                     <h3 className="font-medium text-sm text-muted-foreground mb-2">
                       CHURCH
                     </h3>
-                    <p>{user.churchName || "Not provided"}</p>
+                    {user.churchMembershipStatus === "VERIFIED" &&
+                    user.church ? (
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{user.church.name}</p>
+                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+                          <CheckCircleIcon className="mr-1 h-3 w-3" /> Verified
+                        </Badge>
+                      </div>
+                    ) : user.churchMembershipStatus === "REQUESTED" ? (
+                      <div className="flex items-center gap-2">
+                        <p className="text-muted-foreground">
+                          Verification Pending
+                        </p>
+                        <Badge
+                          variant="outline"
+                          className="text-amber-500 border-amber-200 bg-amber-50"
+                        >
+                          <CircleIcon className="mr-1 h-3 w-3 fill-amber-500" />{" "}
+                          Pending
+                        </Badge>
+                      </div>
+                    ) : (
+                      <p>{user.churchName || "Not provided"}</p>
+                    )}
                     {user.churchWebsite && (
                       <a
                         href={user.churchWebsite}
@@ -261,7 +285,7 @@ export default async function ProfilePage() {
 
                     <ul className="space-y-2 text-sm">
                       <li className="flex items-center">
-                        {user.firstName && user.lastName ? (
+                        {!missingFields.includes("First Name") ? (
                           <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
                         ) : (
                           <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
@@ -269,7 +293,7 @@ export default async function ProfilePage() {
                         <span>Add your name</span>
                       </li>
                       <li className="flex items-center">
-                        {user.bio ? (
+                        {!missingFields.includes("Bio") ? (
                           <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
                         ) : (
                           <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
@@ -277,7 +301,7 @@ export default async function ProfilePage() {
                         <span>Add a bio</span>
                       </li>
                       <li className="flex items-center">
-                        {user.churchName ? (
+                        {!missingFields.includes("Church Information") ? (
                           <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
                         ) : (
                           <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
@@ -285,7 +309,7 @@ export default async function ProfilePage() {
                         <span>Add church information</span>
                       </li>
                       <li className="flex items-center">
-                        {user.services ? (
+                        {!missingFields.includes("Services & Skills") ? (
                           <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
                         ) : (
                           <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
@@ -293,15 +317,20 @@ export default async function ProfilePage() {
                         <span>List your services/skills</span>
                       </li>
                       <li className="flex items-center">
-                        {user.address ||
-                        user.city ||
-                        user.state ||
-                        user.zipCode ? (
+                        {!missingFields.includes("Location") ? (
                           <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
                         ) : (
                           <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
                         )}
                         <span>Add your location</span>
+                      </li>
+                      <li className="flex items-center">
+                        {!missingFields.includes("Phone Number") ? (
+                          <CheckCircleIcon className="h-4 w-4 text-green-500 mr-2" />
+                        ) : (
+                          <CircleIcon className="h-4 w-4 text-gray-300 mr-2" />
+                        )}
+                        <span>Add phone number (optional)</span>
                       </li>
                     </ul>
                   </div>

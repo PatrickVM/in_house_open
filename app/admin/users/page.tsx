@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { User, Calendar, Mail, Building2, Users } from "lucide-react";
 import { db } from "@/lib/db";
+import { calculateProfileCompletion } from "@/lib/profile-completion";
 
 interface SearchParams {
   page?: string;
@@ -56,24 +57,9 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
   const totalPages = Math.ceil(totalUsers / limit);
 
-  // Calculate profile completion for each user
+  // Calculate profile completion for each user using standardized utility
   const usersWithCompletion = users.map((user) => {
-    const profileFields = [
-      user.firstName,
-      user.lastName,
-      user.bio,
-      user.churchName,
-      user.services,
-      user.address,
-      user.phone,
-    ];
-    const filledFields = profileFields.filter(
-      (field) => field && field.trim() !== ""
-    ).length;
-    const completionPercentage = Math.round(
-      (filledFields / profileFields.length) * 100
-    );
-
+    const { completionPercentage } = calculateProfileCompletion(user);
     return {
       ...user,
       completionPercentage,

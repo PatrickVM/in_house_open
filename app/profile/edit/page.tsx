@@ -13,9 +13,19 @@ export default async function EditProfilePage() {
     redirect("/login?callbackUrl=/profile/edit");
   }
 
-  // Get full user data from database
+  // Get full user data from database including church information
   const user = await db.user.findUnique({
     where: { id: session.user.id },
+    include: {
+      church: {
+        select: {
+          id: true,
+          name: true,
+          city: true,
+          state: true,
+        },
+      },
+    },
   });
 
   if (!user) {
