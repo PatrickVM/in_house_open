@@ -14,6 +14,9 @@ async function getMapData() {
         items: {
           some: {
             moderationStatus: "APPROVED",
+            status: {
+              not: "COMPLETED",
+            },
           },
         },
       },
@@ -21,6 +24,9 @@ async function getMapData() {
         items: {
           where: {
             moderationStatus: "APPROVED",
+            status: {
+              not: "COMPLETED",
+            },
           },
           include: {
             claimer: {
