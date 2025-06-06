@@ -85,21 +85,26 @@ export async function getVerificationRequestsForMember(
     return [];
   }
 
-  // Filter out requests that this member has already verified
-  const memberVerifications = await db.churchVerificationRequest.findMany({
+  // Filter out requests that this member has already verified using the new MemberVerification table
+  const memberVerifications = await db.memberVerification.findMany({
     where: {
-      churchId,
       verifierId: userId,
-      status: {
-        in: ["APPROVED", "REJECTED"],
+      request: {
+        churchId,
       },
     },
     select: {
-      userId: true,
+      request: {
+        select: {
+          userId: true,
+        },
+      },
     },
   });
 
-  const verifiedUserIds = new Set(memberVerifications.map((v) => v.userId));
+  const verifiedUserIds = new Set(
+    memberVerifications.map((v) => v.request.userId)
+  );
   const availableRequests = allRequests.filter(
     (request) => !verifiedUserIds.has(request.userId)
   );
@@ -139,11 +144,27 @@ export async function getVerificationProgress(
   requiredVerifications: number;
   verifierNames: string[];
 }> {
-  const approvedVerifications = await db.churchVerificationRequest.findMany({
+  // First, get the original verification request
+  const originalRequest = await db.churchVerificationRequest.findFirst({
     where: {
       userId,
       churchId,
-      status: "APPROVED",
+    },
+  });
+
+  if (!originalRequest) {
+    return {
+      currentVerifications: 0,
+      requiredVerifications: 3,
+      verifierNames: [],
+    };
+  }
+
+  // Get approved member verifications for this request
+  const approvedVerifications = await db.memberVerification.findMany({
+    where: {
+      requestId: originalRequest.id,
+      action: "APPROVED",
     },
     include: {
       verifier: {
@@ -161,14 +182,12 @@ export async function getVerificationProgress(
     select: { minVerificationsRequired: true },
   });
 
-  const verifierNames = approvedVerifications
-    .filter((v) => v.verifier)
-    .map((v) => {
-      const verifier = v.verifier!;
-      return verifier.firstName && verifier.lastName
-        ? `${verifier.firstName} ${verifier.lastName}`
-        : verifier.email;
-    });
+  const verifierNames = approvedVerifications.map((v) => {
+    const verifier = v.verifier;
+    return verifier.firstName && verifier.lastName
+      ? `${verifier.firstName} ${verifier.lastName}`
+      : verifier.email;
+  });
 
   return {
     currentVerifications: approvedVerifications.length,

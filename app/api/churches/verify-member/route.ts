@@ -101,16 +101,12 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if this member has already verified this request
-      const existingVerification = await db.churchVerificationRequest.findFirst(
-        {
-          where: {
-            userId: verificationRequest.userId,
-            churchId: verificationRequest.churchId,
-            verifierId: session.user.id,
-            status: { in: ["APPROVED", "REJECTED"] },
-          },
-        }
-      );
+      const existingVerification = await db.memberVerification.findFirst({
+        where: {
+          requestId: validatedData.requestId,
+          verifierId: session.user.id,
+        },
+      });
 
       if (existingVerification) {
         return NextResponse.json(
@@ -121,17 +117,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (validatedData.action === "reject") {
-      // For regular members, create a separate rejection record
+      // For regular members, create a member verification record
       if (!isLeadContact) {
-        await db.churchVerificationRequest.create({
+        await db.memberVerification.create({
           data: {
-            userId: verificationRequest.userId,
-            churchId: verificationRequest.churchId,
-            requesterId: verificationRequest.requesterId,
+            requestId: validatedData.requestId,
             verifierId: session.user.id,
-            status: "REJECTED",
-            rejectedAt: new Date(),
-            memberNotes: validatedData.memberNotes,
+            action: "REJECTED",
+            notes: validatedData.memberNotes,
           },
         });
 
@@ -168,16 +161,13 @@ export async function POST(request: NextRequest) {
 
     // Approve the verification
     if (!isLeadContact) {
-      // For regular members, create a separate approval record
-      await db.churchVerificationRequest.create({
+      // For regular members, create a member verification record
+      await db.memberVerification.create({
         data: {
-          userId: verificationRequest.userId,
-          churchId: verificationRequest.churchId,
-          requesterId: verificationRequest.requesterId,
+          requestId: validatedData.requestId,
           verifierId: session.user.id,
-          status: "APPROVED",
-          verifiedAt: new Date(),
-          memberNotes: validatedData.memberNotes,
+          action: "APPROVED",
+          notes: validatedData.memberNotes,
         },
       });
     } else {
@@ -194,11 +184,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if this user now has enough verifications or if lead contact approved
-    const approvedVerifications = await db.churchVerificationRequest.count({
+    const approvedVerifications = await db.memberVerification.count({
       where: {
-        userId: verificationRequest.userId,
-        churchId: verificationRequest.churchId,
-        status: "APPROVED",
+        requestId: validatedData.requestId,
+        action: "APPROVED",
       },
     });
 
@@ -209,6 +198,16 @@ export async function POST(request: NextRequest) {
     if (shouldApproveUser) {
       // Add user to church and set verifiedAt timestamp
       await db.$transaction(async (tx) => {
+        // Update the original request status
+        await tx.churchVerificationRequest.update({
+          where: { id: validatedData.requestId },
+          data: {
+            status: "APPROVED",
+            verifierId: session.user.id,
+            verifiedAt: new Date(),
+          },
+        });
+
         await tx.user.update({
           where: { id: verificationRequest.userId },
           data: {

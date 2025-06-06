@@ -3,9 +3,11 @@ import { authOptions } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { calculateProfileCompletion } from "@/lib/profile-completion";
+import { isUserEligibleToVerify } from "@/lib/verification-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import VerificationCarousel from "@/components/member/VerificationCarousel";
 import Link from "next/link";
 import {
   CheckCircle,
@@ -66,6 +68,11 @@ export default async function UserDashboard() {
   const hasChurch = user.churchMembershipStatus === "VERIFIED" && user.church;
   const hasPendingRequest = user.churchMembershipStatus === "REQUESTED";
   const wasRejected = user.churchMembershipStatus === "REJECTED";
+
+  // Check if user is eligible to verify other members
+  const canVerifyMembers = hasChurch
+    ? await isUserEligibleToVerify(session.user.id)
+    : false;
 
   // Getting started checklist
   const checklistItems = [
@@ -255,6 +262,14 @@ export default async function UserDashboard() {
               )}
             </CardContent>
           </Card>
+
+          {/* Member Verification Carousel */}
+          {hasChurch && user.church && (
+            <VerificationCarousel
+              churchId={user.church.id}
+              isEligible={canVerifyMembers}
+            />
+          )}
         </div>
 
         {/* Sidebar */}

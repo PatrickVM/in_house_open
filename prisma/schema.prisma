@@ -50,6 +50,7 @@ model User {
   church                      Church? @relation("ChurchMembers", fields: [churchId], references: [id])
   verificationRequests        ChurchVerificationRequest[] @relation("UserVerificationRequests")
   verificationsMade           ChurchVerificationRequest[] @relation("VerifierUser")
+  memberVerifications         MemberVerification[] @relation("MemberVerifications")
 }
 
 model Account {
@@ -167,8 +168,23 @@ model ChurchVerificationRequest {
   user              User                @relation("UserVerificationRequests", fields: [userId], references: [id])
   church            Church              @relation(fields: [churchId], references: [id])
   verifier          User?               @relation("VerifierUser", fields: [verifierId], references: [id])
+  memberVerifications MemberVerification[]
   
   @@unique([userId, churchId])
+}
+
+model MemberVerification {
+  id                String              @id @default(cuid())
+  requestId         String              // References the original ChurchVerificationRequest
+  verifierId        String              // Member who did the verification
+  action            VerificationAction  // APPROVED or REJECTED
+  notes             String?
+  createdAt         DateTime            @default(now())
+  
+  request           ChurchVerificationRequest @relation(fields: [requestId], references: [id])
+  verifier          User                @relation("MemberVerifications", fields: [verifierId], references: [id])
+  
+  @@unique([requestId, verifierId]) // One verification per member per request
 }
 
 enum UserRole {
@@ -198,6 +214,11 @@ enum ChurchMembershipStatus {
 
 enum VerificationStatus {
   PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VerificationAction {
   APPROVED
   REJECTED
 }

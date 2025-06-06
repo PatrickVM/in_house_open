@@ -12,6 +12,29 @@ body {
   }
 }
 
+/* Leaflet map z-index controls to prevent conflicts with modals/sheets */
+@layer base {
+  .leaflet-pane,
+  .leaflet-map-pane,
+  .leaflet-tile-pane,
+  .leaflet-overlay-pane,
+  .leaflet-shadow-pane,
+  .leaflet-marker-pane,
+  .leaflet-tooltip-pane,
+  .leaflet-popup-pane {
+    z-index: auto !important;
+  }
+
+  .leaflet-container {
+    z-index: 1 !important;
+  }
+
+  /* Ensure Leaflet popups don't exceed modal z-index */
+  .leaflet-popup-pane {
+    z-index: 1000 !important;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
