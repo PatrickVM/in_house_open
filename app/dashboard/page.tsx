@@ -22,11 +22,38 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-export default async function UserDashboard() {
+interface DashboardPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function UserDashboard({
+  searchParams,
+}: DashboardPageProps) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
     redirect("/login?callbackUrl=/dashboard");
+  }
+
+  // Get search parameters for error handling
+  const resolvedSearchParams = await searchParams;
+  const errorParam = resolvedSearchParams.error as string;
+
+  const userId = session.user.id;
+
+  // Check if user has map access
+  let hasMapAccess = false;
+  if (session.user.role === "ADMIN") {
+    hasMapAccess = true;
+  } else if (session.user.role === "CHURCH") {
+    // Check if user is leadContact for an approved church
+    const church = await db.church.findFirst({
+      where: {
+        leadContactId: userId,
+        applicationStatus: "APPROVED",
+      },
+    });
+    hasMapAccess = !!church;
   }
 
   // Get full user data with church information
@@ -93,7 +120,7 @@ export default async function UserDashboard() {
     {
       id: "explore",
       title: "Explore the community",
-      description: "Browse available items and services",
+      description: "Discover the skills in your tribe",
       completed: hasChurch,
       href: "/directory",
     },
@@ -116,6 +143,27 @@ export default async function UserDashboard() {
           Here's what's happening in your community
         </p>
       </div>
+
+      {/* Error Message for Map Access Denial */}
+      {errorParam === "map_access_denied" && (
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardContent className="flex items-start gap-3 p-4">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-amber-800 mb-1">
+                Map Access Restricted
+              </h3>
+              <p className="text-sm text-amber-700">
+                The community map is only available to church lead contacts and
+                administrators.
+                {session.user.role === "CHURCH"
+                  ? " You need to be the lead contact for an approved church to access the map."
+                  : " To access the map, you need to become a church lead contact or have administrator privileges."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Getting Started Section */}
@@ -334,17 +382,19 @@ export default async function UserDashboard() {
                   Community Directory
                 </Link>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="w-full justify-start"
-              >
-                <Link href="/map">
-                  <MapPin className="w-4 h-4 mr-2" />
-                  Explore Map
-                </Link>
-              </Button>
+              {hasMapAccess && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
+                  <Link href="/map">
+                    <MapPin className="w-4 h-4 mr-2" />
+                    Explore Map
+                  </Link>
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

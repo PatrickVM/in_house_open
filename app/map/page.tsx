@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import MapContainer from "@/components/map/MapContainer";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
+import { redirect } from "next/navigation";
 
 // Server-side data fetching
 async function getMapData() {
@@ -60,11 +61,40 @@ async function getMapData() {
 }
 
 export default async function MapPage() {
+  // Authentication and Authorization Check
+  const session = (await getServerSession(authOptions as any)) as any;
+
+  if (!session?.user) {
+    redirect("/login?callbackUrl=/map");
+  }
+
+  // Allow ADMINs
+  if (session.user.role === "ADMIN") {
+    // Continue to map - ADMINs have full access
+  }
+  // Allow CHURCH users who are leadContacts for approved churches
+  else if (session.user.role === "CHURCH") {
+    const church = await db.church.findFirst({
+      where: {
+        leadContactId: session.user.id,
+        applicationStatus: "APPROVED",
+      },
+    });
+
+    if (!church) {
+      // Church user is not a lead contact for an approved church
+      redirect("/dashboard?error=map_access_denied");
+    }
+  }
+  // Deny all other users (USER role, etc.)
+  else {
+    redirect("/dashboard?error=map_access_denied");
+  }
+
   // Get data
   const { churchesWithItems } = await getMapData();
 
-  // Get current user
-  const session = (await getServerSession(authOptions as any)) as any;
+  // Get current user for map component
   const currentUser = session?.user
     ? {
         id: session.user.id as string,

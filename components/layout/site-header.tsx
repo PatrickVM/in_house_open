@@ -43,12 +43,17 @@ export function SiteHeader() {
   const isAdmin = session?.user?.role === "ADMIN";
   const isChurch = session?.user?.role === "CHURCH";
 
+  // Note: For church users, we're showing the map link optimistically.
+  // The actual authorization check happens on the map page itself.
+  // This prevents the need for additional API calls on every header render.
+  const hasMapAccess = isAdmin || isChurch;
+
   const navigationItems = [
     {
       href: "/map",
       label: "Map",
       icon: MapIcon,
-      show: true,
+      show: isAuthenticated && hasMapAccess,
     },
     {
       href: "/directory",
@@ -209,21 +214,24 @@ export function SiteHeader() {
         </Link>
         <NavigationMenu className="ml-auto">
           <NavigationMenuList>
-            <NavigationMenuItem>
-              <Link href="/map" legacyBehavior passHref>
-                <NavigationMenuLink
-                  className={cn(
-                    navigationMenuTriggerStyle(),
-                    pathname?.startsWith("/map") && "text-primary"
-                  )}
-                >
-                  <span className="flex items-center">
-                    <MapIcon className="mr-2 h-4 w-4" />
-                    Map
-                  </span>
-                </NavigationMenuLink>
-              </Link>
-            </NavigationMenuItem>
+            {/* Only show Map link if user is authenticated and has map access */}
+            {isAuthenticated && hasMapAccess && (
+              <NavigationMenuItem>
+                <Link href="/map" legacyBehavior passHref>
+                  <NavigationMenuLink
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      pathname?.startsWith("/map") && "text-primary"
+                    )}
+                  >
+                    <span className="flex items-center">
+                      <MapIcon className="mr-2 h-4 w-4" />
+                      Map
+                    </span>
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            )}
 
             <NavigationMenuItem>
               <Link href="/directory" legacyBehavior passHref>
