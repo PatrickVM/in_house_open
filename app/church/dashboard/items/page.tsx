@@ -6,7 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Package, Plus, MapPin, Calendar, User, Edit, Eye } from "lucide-react";
+import {
+  Package,
+  Plus,
+  MapPin,
+  Calendar,
+  User,
+  Edit,
+  Eye,
+  Mail,
+  Phone,
+  Building2,
+  CheckCircle,
+  X,
+} from "lucide-react";
+import CompleteItemButton from "@/components/church/CompleteItemButton";
+import UnclaimItemButton from "@/components/church/UnclaimItemButton";
 
 interface ChurchItemsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -51,7 +66,7 @@ export default async function ChurchItemsPage({
     whereClause.moderationStatus = moderationFilter;
   }
 
-  // Get church items with claimer information
+  // Get church items with claimer information including phone
   const items = await db.item.findMany({
     where: whereClause,
     include: {
@@ -61,13 +76,59 @@ export default async function ChurchItemsPage({
           firstName: true,
           lastName: true,
           email: true,
+          phone: true,
         },
       },
+      // Get the claiming church information for claimed items
+      ...(statusFilter === "CLAIMED" || !statusFilter
+        ? {
+            church: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          }
+        : {}),
     },
     orderBy: {
       createdAt: "desc",
     },
   });
+
+  // For claimed items, we need to get the claiming church details
+  const itemsWithClaimingChurchInfo = await Promise.all(
+    items.map(async (item) => {
+      if (item.status === "CLAIMED" && item.claimerId) {
+        // Get the claiming church information
+        const claimingChurch = await db.church.findFirst({
+          where: {
+            leadContactId: item.claimerId,
+            applicationStatus: "APPROVED",
+          },
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            website: true,
+            leadPastorName: true,
+          },
+        });
+
+        return {
+          ...item,
+          claimingChurch,
+        };
+      }
+      return {
+        ...item,
+        claimingChurch: null,
+      };
+    })
+  );
 
   // Calculate statistics
   const stats = {
@@ -265,7 +326,7 @@ export default async function ChurchItemsPage({
       </Card>
 
       {/* Items List */}
-      {items.length === 0 ? (
+      {itemsWithClaimingChurchInfo.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Package className="h-12 w-12 text-muted-foreground mb-4" />
@@ -285,10 +346,10 @@ export default async function ChurchItemsPage({
         </Card>
       ) : (
         <div className="grid gap-6">
-          {items.map((item) => (
+          {itemsWithClaimingChurchInfo.map((item) => (
             <Card key={item.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start gap-6">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold">{item.title}</h3>
@@ -357,7 +418,119 @@ export default async function ChurchItemsPage({
                       )}
                   </div>
 
-                  <div className="flex gap-2 ml-4">
+                  {/* Contact Information Card - Only show if item is claimed */}
+                  {item.status === "CLAIMED" &&
+                    item.claimer &&
+                    item.claimingChurch && (
+                      <div className="w-80">
+                        <Card className="bg-gray-50 border-gray-200">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-medium flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-gray-600" />
+                              Claimed by: {item.claimingChurch.name}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-0 space-y-3">
+                            {/* Lead Contact */}
+                            <div>
+                              <h4 className="text-xs font-medium text-gray-700 mb-2">
+                                Lead Contact
+                              </h4>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-xs">
+                                  <User className="h-3 w-3 text-gray-500" />
+                                  <span>
+                                    {item.claimer.firstName}{" "}
+                                    {item.claimer.lastName}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <Mail className="h-3 w-3 text-gray-500" />
+                                  <a
+                                    href={`mailto:${item.claimer.email}`}
+                                    className="text-blue-600 hover:underline"
+                                  >
+                                    {item.claimer.email}
+                                  </a>
+                                </div>
+                                {item.claimer.phone && (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <Phone className="h-3 w-3 text-gray-500" />
+                                    <a
+                                      href={`tel:${item.claimer.phone}`}
+                                      className="text-blue-600 hover:underline"
+                                    >
+                                      {item.claimer.phone}
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Church Info */}
+                            <div className="border-t border-gray-200 pt-2">
+                              <h4 className="text-xs font-medium text-gray-700 mb-2">
+                                Church Details
+                              </h4>
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2 text-xs">
+                                  <MapPin className="h-3 w-3 text-gray-500" />
+                                  <span className="text-gray-600">
+                                    {item.claimingChurch.city},{" "}
+                                    {item.claimingChurch.state}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs">
+                                  <User className="h-3 w-3 text-gray-500" />
+                                  <span className="text-gray-600">
+                                    Pastor: {item.claimingChurch.leadPastorName}
+                                  </span>
+                                </div>
+                                {item.claimingChurch.website && (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <span className="text-gray-500">🌐</span>
+                                    <a
+                                      href={item.claimingChurch.website}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline"
+                                    >
+                                      Website
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {item.claimedAt && (
+                              <div className="border-t border-gray-200 pt-2">
+                                <p className="text-xs text-gray-500">
+                                  Claimed on{" "}
+                                  {item.claimedAt.toLocaleDateString()}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="border-t border-gray-200 pt-3 flex gap-2">
+                              <CompleteItemButton
+                                itemId={item.id}
+                                itemTitle={item.title}
+                                claimingChurchName={item.claimingChurch.name}
+                              />
+                              <UnclaimItemButton
+                                itemId={item.id}
+                                itemTitle={item.title}
+                                claimingChurchName={item.claimingChurch.name}
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/items/${item.id}`}>
                         <Eye className="w-4 h-4 mr-1" />
