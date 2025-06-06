@@ -154,7 +154,7 @@ export default function MapContainer({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-2"
+                    className="mt-2 text-white"
                     onClick={() => handleChurchProfileClick(church.id)}
                   >
                     View Church Profile
