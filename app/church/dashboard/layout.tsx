@@ -22,11 +22,11 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SidebarNavLink } from "@/components/ui/sidebar-nav-link";
 
 interface ChurchLayoutProps {
   children: React.ReactNode;
@@ -52,32 +52,32 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
     {
       title: "Dashboard",
       url: "/church/dashboard",
-      icon: LayoutDashboard,
+      icon: "LayoutDashboard" as const,
     },
     {
       title: "My Items",
       url: "/church/dashboard/items",
-      icon: Package,
+      icon: "Package" as const,
     },
     {
       title: "Members",
       url: "/church/dashboard/members",
-      icon: Users,
+      icon: "Users" as const,
     },
     {
       title: "Area Items",
       url: "/church/dashboard/area-items",
-      icon: MapPin,
+      icon: "MapPin" as const,
     },
     {
       title: "Daily Messages",
       url: "/church/dashboard/messages",
-      icon: MessageSquare,
+      icon: "MessageSquare" as const,
     },
     {
       title: "Church Profile",
       url: "/church/dashboard/profile",
-      icon: Settings,
+      icon: "Settings" as const,
     },
   ];
 
@@ -98,12 +98,9 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
               <SidebarMenu>
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                    <SidebarNavLink href={item.url} icon={item.icon}>
+                      {item.title}
+                    </SidebarNavLink>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>

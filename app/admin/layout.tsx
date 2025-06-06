@@ -9,11 +9,11 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { SidebarNavLink } from "@/components/ui/sidebar-nav-link";
 import {
   Building2,
   FileText,
@@ -45,27 +45,27 @@ export default async function AdminLayout({
     {
       title: "Dashboard",
       url: "/admin",
-      icon: LayoutDashboard,
+      icon: "LayoutDashboard" as const,
     },
     {
       title: "Applications",
       url: "/admin/applications",
-      icon: FileText,
+      icon: "FileText" as const,
     },
     {
       title: "Churches",
       url: "/admin/churches",
-      icon: Building2,
+      icon: "Building2" as const,
     },
     {
       title: "Users",
       url: "/admin/users",
-      icon: Users,
+      icon: "Users" as const,
     },
     {
       title: "Items",
       url: "/admin/items",
-      icon: Package,
+      icon: "Package" as const,
     },
   ];
 
@@ -86,12 +86,9 @@ export default async function AdminLayout({
               <SidebarMenu>
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link href={item.url}>
-                        <item.icon className="w-5 h-5" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                    <SidebarNavLink href={item.url} icon={item.icon}>
+                      {item.title}
+                    </SidebarNavLink>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
