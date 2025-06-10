@@ -89,6 +89,12 @@ export default async function ProfilePage() {
           >
             Edit Profile
           </Link>
+          <Link
+            href="/invite-church"
+            className="text-sm font-medium hover:underline underline-offset-4"
+          >
+            Invite Church
+          </Link>
           {/* will initialize in phase 2 */}
           {/* <Link
             href="#"

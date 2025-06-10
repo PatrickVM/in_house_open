@@ -51,6 +51,11 @@ model User {
   verificationRequests        ChurchVerificationRequest[] @relation("UserVerificationRequests")
   verificationsMade           ChurchVerificationRequest[] @relation("VerifierUser")
   memberVerifications         MemberVerification[] @relation("MemberVerifications")
+  
+  // New invitation relations
+  churchInvitationsSent       ChurchInvitation[] @relation("ChurchInvitations")
+  claimedChurchInvitations    ChurchInvitation[] @relation("ClaimedChurchInvitations")
+  invitationAnalytics         InvitationAnalytics?
 }
 
 model Account {
@@ -95,6 +100,8 @@ model InviteCode {
   userId    String    @unique
   claimed   Boolean   @default(false)
   claimedAt DateTime?
+  scans     Int       @default(0)  // QR code scan count
+  lastScannedAt DateTime?
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -187,6 +194,37 @@ model MemberVerification {
   @@unique([requestId, verifierId]) // One verification per member per request
 }
 
+model ChurchInvitation {
+  id              String    @id @default(cuid())
+  inviterEmail    String    // User who sent invitation
+  inviterName     String    // User's name
+  inviterPhone    String?   // User's phone
+  churchEmail     String    // Target church email
+  customMessage   String?   // "To whom it may concern" message
+  status          ChurchInvitationStatus @default(PENDING)
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime  // 7 days from creation
+  claimedAt       DateTime?
+  claimedByUserId String?   // User who claimed the invitation
+  
+  inviter         User      @relation("ChurchInvitations", fields: [inviterEmail], references: [email])
+  claimedBy       User?     @relation("ClaimedChurchInvitations", fields: [claimedByUserId], references: [id])
+}
+
+model InvitationAnalytics {
+  id              String    @id @default(cuid())
+  userId          String    // User being tracked
+  churchInvitesSent Int     @default(0)
+  userInvitesSent Int       @default(0)
+  userInvitesScanned Int    @default(0)
+  userInvitesCompleted Int  @default(0)
+  lastUpdated     DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id])
+  
+  @@unique([userId])
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -221,4 +259,11 @@ enum VerificationStatus {
 enum VerificationAction {
   APPROVED
   REJECTED
+}
+
+enum ChurchInvitationStatus {
+  PENDING
+  CLAIMED
+  EXPIRED
+  CANCELLED
 }

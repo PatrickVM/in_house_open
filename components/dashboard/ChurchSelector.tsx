@@ -168,7 +168,7 @@ export default function ChurchSelector() {
           />
         </div>
         <Button asChild variant="outline">
-          <Link href="/church/apply">
+          <Link href="/invite-church">
             <Plus className="w-4 h-4 mr-2" />
             Invite Church
           </Link>
@@ -201,7 +201,7 @@ export default function ChurchSelector() {
                 : "No churches are currently available"}
             </p>
             <Button asChild>
-              <Link href="/church/apply">
+              <Link href="/invite-church">
                 <Plus className="w-4 h-4 mr-2" />
                 Invite Your Church
               </Link>
