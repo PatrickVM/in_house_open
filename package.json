@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f local-ih-postgres",
+    "docker:reset": "docker-compose down -v && docker-compose up -d",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:setup": "npm run docker:up && sleep 5 && npm run db:migrate && npm run db:seed",
+    "db:reset": "npm run docker:reset && sleep 5 && npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",

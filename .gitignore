@@ -25,3 +25,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# docker
+.docker
+docker-compose.yml
+
+# Docker volumes 
+/postgres-data/
+
+prisma/migrations/.seed.ts
