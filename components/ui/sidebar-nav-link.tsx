@@ -13,6 +13,7 @@ import {
   Users,
   FileText,
   BarChart,
+  Send,
 } from "lucide-react";
 
 // Icon mapping for dynamic rendering
@@ -26,6 +27,7 @@ const iconMap = {
   Users,
   FileText,
   BarChart,
+  Send,
 } as const;
 
 type IconName = keyof typeof iconMap;

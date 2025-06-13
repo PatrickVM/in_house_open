@@ -91,12 +91,14 @@ type Invitation = ChurchInvitation | UserInvitation;
 
 interface InvitationsTableProps {
   invitations: Invitation[];
+  viewOnly?: boolean;
   onStatusChange: () => void;
   onDelete: () => void;
 }
 
 export default function InvitationsTable({
   invitations,
+  viewOnly = false,
   onStatusChange,
   onDelete,
 }: InvitationsTableProps) {
@@ -324,7 +326,7 @@ export default function InvitationsTable({
               <TableHead>Invitee</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="w-[80px]">Actions</TableHead>
+              {!viewOnly && <TableHead className="w-[80px]">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -336,59 +338,61 @@ export default function InvitationsTable({
                 <TableCell>{formatEmail(invitation)}</TableCell>
                 <TableCell>{formatDate(invitation.createdAt)}</TableCell>
                 <TableCell>{formatStatus(invitation)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="h-8 w-8 p-0"
-                        disabled={loading === invitation.id}
-                      >
-                        <span className="sr-only">Open menu</span>
-                        {loading === invitation.id ? (
-                          <HourglassIcon className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <MoreVertical className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {/* Expire option - only for active invitations */}
-                      {(invitation.type === "church" &&
-                        invitation.status === "PENDING") ||
-                      (invitation.type === "user" &&
-                        (!invitation.expiresAt ||
-                          new Date(invitation.expiresAt) > new Date())) ? (
-                        <DropdownMenuItem
-                          onClick={() => handleAction("expire", invitation)}
+                {!viewOnly && (
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          disabled={loading === invitation.id}
                         >
-                          <Clock className="mr-2 h-4 w-4" />
-                          <span>Expire Invitation</span>
-                        </DropdownMenuItem>
-                      ) : null}
-
-                      {/* Resend option - only for church invitations */}
-                      {invitation.type === "church" &&
-                        invitation.status === "PENDING" && (
+                          <span className="sr-only">Open menu</span>
+                          {loading === invitation.id ? (
+                            <HourglassIcon className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <MoreVertical className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {/* Expire option - only for active invitations */}
+                        {(invitation.type === "church" &&
+                          invitation.status === "PENDING") ||
+                        (invitation.type === "user" &&
+                          (!invitation.expiresAt ||
+                            new Date(invitation.expiresAt) > new Date())) ? (
                           <DropdownMenuItem
-                            onClick={() => handleAction("resend", invitation)}
+                            onClick={() => handleAction("expire", invitation)}
                           >
-                            <Send className="mr-2 h-4 w-4" />
-                            <span>Resend Invitation</span>
+                            <Clock className="mr-2 h-4 w-4" />
+                            <span>Expire Invitation</span>
                           </DropdownMenuItem>
-                        )}
+                        ) : null}
 
-                      <DropdownMenuItem
-                        onClick={() => handleAction("delete", invitation)}
-                      >
-                        <Trash className="mr-2 h-4 w-4" />
-                        <span>Delete Invitation</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+                        {/* Resend option - only for church invitations */}
+                        {invitation.type === "church" &&
+                          invitation.status === "PENDING" && (
+                            <DropdownMenuItem
+                              onClick={() => handleAction("resend", invitation)}
+                            >
+                              <Send className="mr-2 h-4 w-4" />
+                              <span>Resend Invitation</span>
+                            </DropdownMenuItem>
+                          )}
+
+                        <DropdownMenuItem
+                          onClick={() => handleAction("delete", invitation)}
+                        >
+                          <Trash className="mr-2 h-4 w-4" />
+                          <span>Delete Invitation</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

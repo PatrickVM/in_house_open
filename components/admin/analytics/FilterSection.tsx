@@ -70,7 +70,7 @@ export default function FilterSection({
   const router = useRouter();
 
   // State for filter values
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedChurch, setSelectedChurch] = useState<string>(
     searchParams.get("churchId") || "all"
   );

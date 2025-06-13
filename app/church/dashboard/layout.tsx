@@ -11,6 +11,7 @@ import {
   MapPin,
   Settings,
   Users,
+  Send,
 } from "lucide-react";
 import {
   Sidebar,
@@ -63,6 +64,11 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
       title: "Members",
       url: "/church/dashboard/members",
       icon: "Users" as const,
+    },
+    {
+      title: "Invitations",
+      url: "/church/dashboard/invitations",
+      icon: "Send" as const,
     },
     {
       title: "Area Items",
