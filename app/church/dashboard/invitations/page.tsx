@@ -1,12 +1,11 @@
-import { Suspense } from "react";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
-import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import ChurchInvitationsTab from "@/components/church/analytics/ChurchInvitationsTab";
 import ChurchMemberBoard from "@/components/church/analytics/ChurchMemberBoard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { db } from "@/lib/db";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Invitations | Church Dashboard",
