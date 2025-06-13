@@ -98,8 +98,6 @@ model InviteCode {
   createdAt DateTime  @default(now())
   expiresAt DateTime?
   userId    String    @unique
-  claimed   Boolean   @default(false)
-  claimedAt DateTime?
   scans     Int       @default(0)  // QR code scan count
   lastScannedAt DateTime?
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)

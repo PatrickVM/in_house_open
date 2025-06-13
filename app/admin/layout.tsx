@@ -20,6 +20,7 @@ import {
   LayoutDashboard,
   Package,
   Users,
+  BarChart,
 } from "lucide-react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
@@ -66,6 +67,11 @@ export default async function AdminLayout({
       title: "Items",
       url: "/admin/items",
       icon: "Package" as const,
+    },
+    {
+      title: "Analytics",
+      url: "/admin/analytics",
+      icon: "BarChart" as const,
     },
   ];
 
