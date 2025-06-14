@@ -20,7 +20,9 @@ import {
   Plus,
   Clock,
   AlertCircle,
+  MessageSquare,
 } from "lucide-react";
+import DailyMessageWidget from "@/components/dashboard/DailyMessageWidget";
 
 interface DashboardPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -101,6 +103,35 @@ export default async function UserDashboard({
     ? await isUserEligibleToVerify(session.user.id)
     : false;
 
+  // Get active messages if user is verified church member
+  let activeMessages: any[] = [];
+  if (hasChurch && user.church) {
+    activeMessages = await db.message.findMany({
+      where: {
+        churchId: user.church.id,
+        status: "PUBLISHED",
+        expiresAt: {
+          gt: new Date(),
+        },
+        targetAudience: "CHURCH_MEMBERS",
+      },
+      take: 3,
+      orderBy: {
+        publishedAt: "desc",
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
+
   // Getting started checklist
   const checklistItems = [
     {
@@ -132,6 +163,11 @@ export default async function UserDashboard({
   const checklistProgress = Math.round(
     (completedChecklist / checklistItems.length) * 100
   );
+
+  // Determine what to show in the main content area
+  const showGettingStarted = completedChecklist < checklistItems.length;
+  const showDailyMessages =
+    !showGettingStarted && hasChurch && activeMessages.length > 0;
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8 max-w-6xl">
@@ -166,68 +202,97 @@ export default async function UserDashboard({
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Getting Started Section */}
+        {/* Main Content Section */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Getting Started Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-                  <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
-                  Getting Started
-                </CardTitle>
-                <Badge variant="outline" className="text-xs md:text-sm">
-                  {completedChecklist}/{checklistItems.length} Complete
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all"
-                  style={{ width: `${checklistProgress}%` }}
-                />
-              </div>
-
-              <div className="space-y-3">
-                {checklistItems.map((item) => (
+          {/* Conditional Content: Getting Started OR Daily Messages */}
+          {showGettingStarted && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                    <CheckCircle className="w-4 h-4 md:w-5 md:h-5" />
+                    Getting Started
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs md:text-sm">
+                    {completedChecklist}/{checklistItems.length} Complete
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div
-                    key={item.id}
-                    className="flex items-start md:items-center justify-between p-3 rounded-lg border gap-3"
-                  >
-                    <div className="flex items-start md:items-center gap-3 min-w-0 flex-1">
-                      {item.completed ? (
-                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 flex-shrink-0 mt-0.5 md:mt-0" />
-                      ) : (
-                        <Circle className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0 mt-0.5 md:mt-0" />
-                      )}
-                      <div className="min-w-0">
-                        <h4 className="font-medium text-sm md:text-base">
-                          {item.title}
-                        </h4>
-                        <p className="text-xs md:text-sm text-muted-foreground">
-                          {item.description}
-                        </p>
+                    className="bg-primary h-2 rounded-full transition-all"
+                    style={{ width: `${checklistProgress}%` }}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  {checklistItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-start md:items-center justify-between p-3 rounded-lg border gap-3"
+                    >
+                      <div className="flex items-start md:items-center gap-3 min-w-0 flex-1">
+                        {item.completed ? (
+                          <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-green-500 flex-shrink-0 mt-0.5 md:mt-0" />
+                        ) : (
+                          <Circle className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground flex-shrink-0 mt-0.5 md:mt-0" />
+                        )}
+                        <div className="min-w-0">
+                          <h4 className="font-medium text-sm md:text-base">
+                            {item.title}
+                          </h4>
+                          <p className="text-xs md:text-sm text-muted-foreground">
+                            {item.description}
+                          </p>
+                        </div>
                       </div>
+                      {!item.completed && (
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="outline"
+                          className="flex-shrink-0"
+                        >
+                          <Link href={item.href}>
+                            <span className="hidden sm:inline">Start</span>
+                            <ArrowRight className="w-4 h-4 sm:ml-1" />
+                          </Link>
+                        </Button>
+                      )}
                     </div>
-                    {!item.completed && (
-                      <Button
-                        asChild
-                        size="sm"
-                        variant="outline"
-                        className="flex-shrink-0"
-                      >
-                        <Link href={item.href}>
-                          <span className="hidden sm:inline">Start</span>
-                          <ArrowRight className="w-4 h-4 sm:ml-1" />
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Daily Messages Widget */}
+          {showDailyMessages && (
+            <DailyMessageWidget churchName={user.church?.name || ""} />
+          )}
+
+          {/* Welcome Message when setup complete but no messages */}
+          {!showGettingStarted && !showDailyMessages && hasChurch && (
+            <Card>
+              <CardContent className="text-center py-8">
+                <MessageSquare className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">All Set Up!</h3>
+                <p className="text-muted-foreground mb-4">
+                  You're all ready to go. Your church hasn't posted any daily
+                  messages recently.
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Button asChild variant="outline">
+                    <Link href="/directory">
+                      <Users className="w-4 h-4 mr-2" />
+                      Browse Community
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Church Status Card */}
           <Card>

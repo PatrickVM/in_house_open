@@ -56,6 +56,12 @@ model User {
   churchInvitationsSent       ChurchInvitation[] @relation("ChurchInvitations")
   claimedChurchInvitations    ChurchInvitation[] @relation("ClaimedChurchInvitations")
   invitationAnalytics         InvitationAnalytics?
+  
+  // Message relations
+  createdMessages     Message[]         @relation("CreatedMessages")
+  moderatedMessages   Message[]         @relation("ModeratedMessages")
+  pollResponses       PollResponse[]    @relation("PollResponses")
+  formResponses       FormResponse[]    @relation("FormResponses")
 }
 
 model Account {
@@ -153,6 +159,9 @@ model Church {
   members             User[]              @relation("ChurchMembers")
   verificationRequests ChurchVerificationRequest[]
   
+  // Message relations
+  messages            Message[]           @relation("ChurchMessages")
+  
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 }
@@ -223,6 +232,107 @@ model InvitationAnalytics {
   @@unique([userId])
 }
 
+model Message {
+  id              String            @id @default(cuid())
+  title           String?           // Optional for user-generated messages
+  messageType     MessageType       @default(DAILY_MESSAGE)
+  status          MessageStatus     @default(DRAFT)
+  
+  // Content
+  content         String            // Markdown supported, max 500 chars
+  contentType     ContentType       @default(TEXT)
+  
+  // Ownership & Scope
+  churchId        String
+  createdById     String
+  targetAudience  TargetAudience    @default(CHURCH_MEMBERS)
+  
+  // Scheduling & Lifecycle
+  scheduledFor    DateTime?         // When to publish (null = immediate)
+  publishedAt     DateTime?         // When actually published
+  expiresAt       DateTime?         // Auto-calculated: publishedAt + 24 hours
+  
+  // User-generated message fields
+  category        UserMessageCategory? // For user-shared messages
+  isAnonymous     Boolean           @default(false)
+  
+  // Moderation
+  moderationStatus ModerationStatus @default(AUTO_APPROVED) // Church messages auto-approved
+  moderatedAt     DateTime?
+  moderatedById   String?           // Admin who moderated
+  moderationNotes String?
+  
+  // Metadata
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  // Relations
+  church          Church            @relation("ChurchMessages", fields: [churchId], references: [id])
+  createdBy       User              @relation("CreatedMessages", fields: [createdById], references: [id])
+  moderatedBy     User?             @relation("ModeratedMessages", fields: [moderatedById], references: [id])
+  
+  // Future: Interactive content relations
+  poll            MessagePoll?      @relation("MessagePoll")
+  form            MessageForm?      @relation("MessageForm")
+  
+  @@index([churchId, messageType, status, publishedAt])
+  @@index([churchId, targetAudience, expiresAt])
+  @@index([messageType, status, moderationStatus]) // For admin queries
+  @@index([expiresAt]) // For cleanup jobs
+}
+
+// Future expansion models (Phase 4+)
+model MessagePoll {
+  id              String            @id @default(cuid())
+  messageId       String            @unique
+  question        String
+  options         Json              // Array of poll options
+  allowMultiple   Boolean           @default(false)
+  expiresAt       DateTime?
+  createdAt       DateTime          @default(now())
+  
+  message         Message           @relation("MessagePoll", fields: [messageId], references: [id], onDelete: Cascade)
+  responses       PollResponse[]
+}
+
+model MessageForm {
+  id              String            @id @default(cuid())
+  messageId       String            @unique
+  formTitle       String
+  fields          Json              // Form field definitions
+  expiresAt       DateTime?
+  createdAt       DateTime          @default(now())
+  
+  message         Message           @relation("MessageForm", fields: [messageId], references: [id], onDelete: Cascade)
+  responses       FormResponse[]
+}
+
+model PollResponse {
+  id              String            @id @default(cuid())
+  pollId          String
+  userId          String
+  selectedOptions Json              // Array of selected option indices
+  createdAt       DateTime          @default(now())
+  
+  poll            MessagePoll       @relation(fields: [pollId], references: [id])
+  user            User              @relation("PollResponses", fields: [userId], references: [id])
+  
+  @@unique([pollId, userId])
+}
+
+model FormResponse {
+  id              String            @id @default(cuid())
+  formId          String
+  userId          String
+  responses       Json              // Form responses data
+  createdAt       DateTime          @default(now())
+  
+  form            MessageForm       @relation(fields: [formId], references: [id])
+  user            User              @relation("FormResponses", fields: [userId], references: [id])
+  
+  @@unique([formId, userId])
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -264,4 +374,46 @@ enum ChurchInvitationStatus {
   CLAIMED
   EXPIRED
   CANCELLED
+}
+
+enum MessageType {
+  DAILY_MESSAGE     // Church daily messages
+  ANNOUNCEMENT      // Church announcements  
+  USER_SHARE        // User-generated content
+  POLL              // Interactive polls (Future)
+  FORM              // Forms/surveys (Future)
+}
+
+enum MessageStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  EXPIRED
+  ARCHIVED
+}
+
+enum ContentType {
+  TEXT              // Markdown text
+  POLL              // Interactive poll (Future)
+  FORM              // Form/survey (Future)
+}
+
+enum TargetAudience {
+  CHURCH_MEMBERS    // Verified members of the church + admin
+  ALL_USERS         // Future: Platform-wide
+  ADMIN_ONLY        // Admin messages
+}
+
+enum UserMessageCategory {
+  TESTIMONY         // User testimonies
+  PRAYER_REQUEST    // Prayer requests
+  GOD_WINK          // God wink moments
+}
+
+enum ModerationStatus {
+  AUTO_APPROVED     // Church messages (no moderation needed)
+  PENDING           // User messages awaiting moderation
+  APPROVED          // Manually approved by admin
+  REJECTED          // Rejected by admin
+  FLAGGED           // Flagged for review
 }
