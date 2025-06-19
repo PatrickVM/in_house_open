@@ -131,15 +131,36 @@ export const archiveMessageSchema = z.object({
 
 // Query parameter schemas for API endpoints
 export const messagesQuerySchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(20),
+  page: z
+    .union([z.string(), z.null()])
+    .optional()
+    .transform((val) => val ?? "1")
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => !isNaN(val) && val >= 1, {
+      message: "Page must be a number greater than or equal to 1",
+    }),
+  limit: z
+    .union([z.string(), z.null()])
+    .optional()
+    .transform((val) => val ?? "20")
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => !isNaN(val) && val >= 1 && val <= 100, {
+      message: "Limit must be a number between 1 and 100",
+    }),
   status: z.string().optional(),
   messageType: z.string().optional(),
   includeExpired: z.coerce.boolean().default(false),
 });
 
 export const activeMessagesQuerySchema = z.object({
-  limit: z.coerce.number().min(1).max(10).default(5),
+  limit: z
+    .union([z.string(), z.null()])
+    .optional()
+    .transform((val) => val ?? "5")
+    .transform((val) => parseInt(val, 10))
+    .refine((val) => !isNaN(val) && val >= 1 && val <= 10, {
+      message: "Limit must be a number between 1 and 10",
+    }),
 });
 
 // Type exports for use in components

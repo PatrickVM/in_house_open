@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get("limit"),
     });
 
-    // Get active messages for the user's church
+    // Get active messages for the user's church (both church and user messages)
     const messages = await db.message.findMany({
       where: {
         churchId: user.church.id,
@@ -53,6 +53,9 @@ export async function GET(request: NextRequest) {
           gt: new Date(), // Only non-expired messages
         },
         targetAudience: "CHURCH_MEMBERS", // Only messages for church members
+        messageType: {
+          in: ["DAILY_MESSAGE", "ANNOUNCEMENT", "USER_SHARE"], // Include user messages
+        },
       },
       include: {
         createdBy: {
@@ -71,7 +74,9 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter to only truly active messages (double-check with utility function)
-    const activeMessages = messages.filter(isMessageActive);
+    const activeMessages = messages.filter((message) =>
+      isMessageActive(message as any)
+    );
 
     return NextResponse.json({
       messages: activeMessages,

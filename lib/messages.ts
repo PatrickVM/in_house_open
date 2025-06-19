@@ -6,47 +6,36 @@ import type {
 } from "@/types/message";
 
 /**
- * Safely convert a date value to a Date object
+ * Ensure date is a proper Date object
  */
 function ensureDate(date: Date | string | null | undefined): Date | null {
   if (!date) return null;
   if (date instanceof Date) return date;
-  return new Date(date);
+  const parsed = new Date(date);
+  return isNaN(parsed.getTime()) ? null : parsed;
 }
 
 /**
- * Calculate expiration date for a message (24 hours after publish)
+ * Calculate when a message should expire (24 hours after publication)
  */
-export function calculateExpirationDate(publishedAt: Date | string): Date {
-  const publishDate = ensureDate(publishedAt);
-  if (!publishDate) throw new Error("Invalid published date");
-
-  const expirationDate = new Date(publishDate);
-  expirationDate.setHours(
-    expirationDate.getHours() + MESSAGE_CONSTRAINTS.AUTO_EXPIRE_HOURS
+export function calculateExpirationDate(publishedAt: Date): Date {
+  const expiresAt = new Date(publishedAt);
+  expiresAt.setHours(
+    expiresAt.getHours() + MESSAGE_CONSTRAINTS.AUTO_EXPIRE_HOURS
   );
-  return expirationDate;
-}
-
-/**
- * Check if a message is expired
- */
-export function isMessageExpired(message: Message): boolean {
-  const expiresAt = ensureDate(message.expiresAt);
-  if (!expiresAt) return false;
-  return new Date() > expiresAt;
+  return expiresAt;
 }
 
 /**
  * Check if a message is currently active (published and not expired)
  */
 export function isMessageActive(message: Message): boolean {
-  const publishedAt = ensureDate(message.publishedAt);
-  return (
-    message.status === "PUBLISHED" &&
-    publishedAt !== null &&
-    !isMessageExpired(message)
-  );
+  if (message.status !== "PUBLISHED") return false;
+
+  const expiresAt = ensureDate(message.expiresAt);
+  if (!expiresAt) return false;
+
+  return new Date() < expiresAt;
 }
 
 /**
@@ -62,44 +51,18 @@ export function shouldPublishMessage(message: Message): boolean {
 }
 
 /**
- * Get the display status for a message (handles auto-expired messages)
+ * Get a human-readable display status for a message
  */
-export function getMessageDisplayStatus(message: Message): MessageStatus {
-  if (message.status === "PUBLISHED" && isMessageExpired(message)) {
-    return "EXPIRED";
+export function getMessageDisplayStatus(message: Message): string {
+  // Check if expired first
+  if (message.status === "PUBLISHED") {
+    const expiresAt = ensureDate(message.expiresAt);
+    if (expiresAt && new Date() >= expiresAt) {
+      return "EXPIRED";
+    }
   }
+
   return message.status;
-}
-
-/**
- * Format message content for display (basic markdown-like formatting)
- */
-export function formatMessageContent(content: string): string {
-  return content
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // Bold
-    .replace(/\*(.*?)\*/g, "<em>$1</em>") // Italic
-    .replace(/\n/g, "<br>") // Line breaks
-    .replace(
-      /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-    ); // Links
-}
-
-/**
- * Get message author display name
- */
-export function getMessageAuthorName(message: MessageWithRelations): string {
-  const { createdBy } = message;
-
-  if (message.isAnonymous) {
-    return "Anonymous";
-  }
-
-  if (createdBy.firstName && createdBy.lastName) {
-    return `${createdBy.firstName} ${createdBy.lastName}`;
-  }
-
-  return createdBy.email;
 }
 
 /**
@@ -125,14 +88,130 @@ export function canDeleteMessage(message: Message, userId: string): boolean {
 }
 
 /**
+ * Check if user can delete a user message (for church/admin management)
+ */
+export function canDeleteUserMessage(
+  message: Message,
+  userId: string,
+  userRole: string,
+  churchLeadContactId?: string
+): boolean {
+  // Only for USER_SHARE messages
+  if (message.messageType !== "USER_SHARE") return false;
+
+  // Admins can delete any user message
+  if (userRole === "ADMIN") return true;
+
+  // Church lead contacts can delete messages from their church
+  if (userRole === "CHURCH" && churchLeadContactId === userId) return true;
+
+  return false;
+}
+
+/**
  * Check if user can publish a message
  */
 export function canPublishMessage(message: Message, userId: string): boolean {
   // Only the creator can publish
   if (message.createdById !== userId) return false;
 
-  // Can only publish drafts
+  // Can only publish draft messages
   return message.status === "DRAFT";
+}
+
+/**
+ * Get the author name for display (handles anonymous messages)
+ */
+export function getMessageAuthorName(
+  message: Message & {
+    createdBy: {
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+    };
+  },
+  viewerRole?: string,
+  isChurchDashboard = false
+): string {
+  // If message is anonymous and viewer shouldn't see real name
+  if (message.isAnonymous && !isChurchDashboard && viewerRole !== "ADMIN") {
+    return "Fellow Member";
+  }
+
+  // Show real name
+  if (message.createdBy.firstName && message.createdBy.lastName) {
+    return `${message.createdBy.firstName} ${message.createdBy.lastName}`;
+  }
+
+  return message.createdBy.email;
+}
+
+/**
+ * Get user message category display info
+ */
+export function getUserMessageCategoryInfo(category: string): {
+  label: string;
+  icon: string;
+  color: string;
+} {
+  switch (category) {
+    case "TESTIMONY":
+      return {
+        label: "Testimony",
+        icon: "🙏",
+        color: "text-blue-600 border-blue-200",
+      };
+    case "PRAYER_REQUEST":
+      return {
+        label: "Prayer Request",
+        icon: "💭",
+        color: "text-purple-600 border-purple-200",
+      };
+    case "GOD_WINK":
+      return {
+        label: "God Wink",
+        icon: "✨",
+        color: "text-yellow-600 border-yellow-200",
+      };
+    default:
+      return {
+        label: "Shared Message",
+        icon: "💬",
+        color: "text-gray-600 border-gray-200",
+      };
+  }
+}
+
+/**
+ * Format message content for display (basic markdown support)
+ */
+export function formatMessageContent(content: string): string {
+  return content
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/`(.*?)`/g, "<code>$1</code>")
+    .replace(/\n/g, "<br>");
+}
+
+/**
+ * Get relative time string (e.g., "2 hours ago")
+ */
+export function getRelativeTime(date: Date | string): string {
+  const messageDate = ensureDate(date);
+  if (!messageDate) return "Unknown";
+
+  const now = new Date();
+  const diffInMs = now.getTime() - messageDate.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+
+  return messageDate.toLocaleDateString();
 }
 
 /**
@@ -160,36 +239,15 @@ export function getTimeUntilExpiration(message: Message): string | null {
 }
 
 /**
- * Get relative time string (e.g., "2 hours ago", "in 30 minutes")
+ * Get all messages for a church (including user messages)
  */
-export function getRelativeTime(date: Date | string): string {
-  const targetDate = ensureDate(date);
-  if (!targetDate) return "Unknown time";
-
-  const now = new Date();
-  const diffMs = targetDate.getTime() - now.getTime();
-  const absDiffMs = Math.abs(diffMs);
-
-  const minutes = Math.floor(absDiffMs / (1000 * 60));
-  const hours = Math.floor(absDiffMs / (1000 * 60 * 60));
-  const days = Math.floor(absDiffMs / (1000 * 60 * 60 * 24));
-
-  const isPast = diffMs < 0;
-  const suffix = isPast ? "ago" : "from now";
-
-  if (days > 0) {
-    return `${days} day${days === 1 ? "" : "s"} ${suffix}`;
-  }
-
-  if (hours > 0) {
-    return `${hours} hour${hours === 1 ? "" : "s"} ${suffix}`;
-  }
-
-  if (minutes > 0) {
-    return `${minutes} minute${minutes === 1 ? "" : "s"} ${suffix}`;
-  }
-
-  return isPast ? "just now" : "in a moment";
+export async function getMessagesForChurch(
+  churchId: string,
+  includeUserMessages = true
+): Promise<Message[]> {
+  // This would be implemented in the API routes
+  // Placeholder for the function signature
+  throw new Error("Not implemented - use API routes instead");
 }
 
 /**
@@ -199,9 +257,12 @@ export function validateMessageConstraints(
   existingMessages: Message[],
   messageType: "DAILY_MESSAGE" | "ANNOUNCEMENT"
 ): { valid: boolean; error?: string } {
-  // Check scheduled message limit
+  // Check scheduled message limit (only applies to church messages)
   const scheduledCount = existingMessages.filter(
-    (msg) => msg.status === "SCHEDULED" || msg.status === "DRAFT"
+    (msg) =>
+      (msg.status === "SCHEDULED" || msg.status === "DRAFT") &&
+      (msg.messageType === "DAILY_MESSAGE" ||
+        msg.messageType === "ANNOUNCEMENT")
   ).length;
 
   if (scheduledCount >= MESSAGE_CONSTRAINTS.MAX_SCHEDULED_MESSAGES) {

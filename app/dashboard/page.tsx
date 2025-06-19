@@ -425,17 +425,18 @@ export default async function UserDashboard({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button
+              {/* ENHANCEMENT: add when we allow specified users to claim and post items */}
+              {/* <Button
                 asChild
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
               >
-                <Link href="/directory">
+                <Link href="/">
                   <MapPin className="w-4 h-4 mr-2" />
                   Browse Items
                 </Link>
-              </Button>
+              </Button> */}
               <Button
                 asChild
                 variant="outline"
@@ -447,6 +448,19 @@ export default async function UserDashboard({
                   Community Directory
                 </Link>
               </Button>
+              {hasChurch && (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                >
+                  <Link href="/dashboard/share">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Share Message
+                  </Link>
+                </Button>
+              )}
               {hasMapAccess && (
                 <Button
                   asChild

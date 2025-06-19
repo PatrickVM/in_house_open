@@ -66,6 +66,11 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
       icon: "Users" as const,
     },
     {
+      title: "Members Posts",
+      url: "/church/dashboard/members-posts",
+      icon: "FileText" as const,
+    },
+    {
       title: "Invitations",
       url: "/church/dashboard/invitations",
       icon: "Send" as const,

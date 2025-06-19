@@ -206,8 +206,8 @@ export default async function ChurchDashboard() {
                           item.status === "AVAILABLE"
                             ? "text-green-600 border-green-200"
                             : item.status === "CLAIMED"
-                            ? "text-amber-600 border-amber-200"
-                            : "text-blue-600 border-blue-200"
+                              ? "text-amber-600 border-amber-200"
+                              : "text-blue-600 border-blue-200"
                         }
                       >
                         {item.status}
@@ -238,7 +238,7 @@ export default async function ChurchDashboard() {
           <CardTitle className="text-base md:text-lg">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
               href="/church/dashboard/items/new"
               className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group"
@@ -261,7 +261,7 @@ export default async function ChurchDashboard() {
             </Link>
             <Link
               href="/church/dashboard/messages"
-              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group sm:col-span-2 lg:col-span-1"
+              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group"
             >
               <MessageSquare className="w-6 h-6 md:w-8 md:h-8 text-purple-600 mb-2 group-hover:scale-105 transition-transform" />
               <h3 className="font-medium text-sm md:text-base">
@@ -269,6 +269,16 @@ export default async function ChurchDashboard() {
               </h3>
               <p className="text-xs md:text-sm text-muted-foreground mt-1">
                 Broadcast to your community
+              </p>
+            </Link>
+            <Link
+              href="/church/dashboard/member-posts"
+              className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group"
+            >
+              <Users className="w-6 h-6 md:w-8 md:h-8 text-indigo-600 mb-2 group-hover:scale-105 transition-transform" />
+              <h3 className="font-medium text-sm md:text-base">Member Posts</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                Manage member testimonies
               </p>
             </Link>
           </div>

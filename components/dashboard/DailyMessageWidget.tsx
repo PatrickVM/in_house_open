@@ -1,31 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  MessageSquare,
-  Clock,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import MessageCategoryIcon from "@/components/user/MessageCategoryIcon";
+import MessageSharingForm from "@/components/user/MessageSharingForm";
 import {
   formatMessageContent,
-  getTimeUntilExpiration,
   getMessageAuthorName,
+  getTimeUntilExpiration,
 } from "@/lib/messages";
 import type { MessageWithRelations } from "@/types/message";
+import { MESSAGE_TYPE_LABELS } from "@/types/message";
+import {
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  MessageSquare,
+  Plus,
+  RefreshCw,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface DailyMessageWidgetProps {
   churchName: string;
-}
-
-interface ActiveMessagesResponse {
-  messages: MessageWithRelations[];
-  churchName: string;
-  totalCount: number;
 }
 
 export default function DailyMessageWidget({
@@ -37,22 +35,22 @@ export default function DailyMessageWidget({
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(
     new Set()
   );
+  const [showShareForm, setShowShareForm] = useState(false);
 
   const fetchMessages = async () => {
     try {
-      setLoading(true);
-      const response = await fetch("/api/messages/active?limit=3");
+      setError(null);
+      const response = await fetch("/api/messages/active");
 
       if (!response.ok) {
         throw new Error("Failed to fetch messages");
       }
 
-      const data: ActiveMessagesResponse = await response.json();
-      setMessages(data.messages);
-      setError(null);
+      const data = await response.json();
+      setMessages(data.messages || []);
     } catch (err) {
-      console.error("Error fetching active messages:", err);
-      setError(err instanceof Error ? err.message : "Failed to load messages");
+      console.error("Error fetching messages:", err);
+      setError("Failed to load messages");
     } finally {
       setLoading(false);
     }
@@ -61,9 +59,8 @@ export default function DailyMessageWidget({
   useEffect(() => {
     fetchMessages();
 
-    // Refresh messages every 5 minutes
+    // Refresh every 5 minutes
     const interval = setInterval(fetchMessages, 5 * 60 * 1000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -75,6 +72,19 @@ export default function DailyMessageWidget({
       newExpanded.add(messageId);
     }
     setExpandedMessages(newExpanded);
+  };
+
+  const getMessageTypeDisplay = (messageType: string, category?: string) => {
+    if (messageType === "USER_SHARE" && category) {
+      return <MessageCategoryIcon category={category} size="sm" />;
+    }
+
+    return (
+      <Badge variant="outline" className="text-xs">
+        {MESSAGE_TYPE_LABELS[messageType as keyof typeof MESSAGE_TYPE_LABELS] ||
+          messageType}
+      </Badge>
+    );
   };
 
   if (loading) {
@@ -131,14 +141,22 @@ export default function DailyMessageWidget({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="text-center py-4">
+          <div className="text-center py-6">
             <MessageSquare className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
             <p className="text-sm text-muted-foreground mb-2">
               No active messages
             </p>
-            <p className="text-xs text-muted-foreground">
-              Your church hasn't posted any daily messages recently
+            <p className="text-xs text-muted-foreground mb-4">
+              Your church hasn't posted any messages recently
             </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowShareForm(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Share Something
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -146,86 +164,146 @@ export default function DailyMessageWidget({
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          Daily Messages
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">From {churchName}</p>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-4">
-        {messages.map((message) => {
-          const isExpanded = expandedMessages.has(message.id);
-          const timeRemaining = getTimeUntilExpiration(message);
-          const authorName = getMessageAuthorName(message);
-          const contentPreview =
-            message.content.length > 150
-              ? message.content.substring(0, 150) + "..."
-              : message.content;
+    <>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Daily Messages
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowShareForm(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Share
+            </Button>
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">From {churchName}</p>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {messages.map((message) => {
+              const isExpanded = expandedMessages.has(message.id);
+              const authorName = getMessageAuthorName({
+                ...message,
+                createdBy: {
+                  ...message.createdBy,
+                  firstName: message.createdBy.firstName ?? null,
+                  lastName: message.createdBy.lastName ?? null,
+                },
+              });
+              const timeRemaining = getTimeUntilExpiration(message);
+              const shouldTruncate = message.content.length > 150;
+              const displayContent =
+                shouldTruncate && !isExpanded
+                  ? message.content.substring(0, 150) + "..."
+                  : message.content;
 
-          return (
-            <div key={message.id} className="border rounded-lg p-3 space-y-2">
-              {message.title && (
-                <h4 className="font-medium text-sm">{message.title}</h4>
-              )}
+              return (
+                <div
+                  key={message.id}
+                  className="border rounded-lg p-4 space-y-3 hover:bg-muted/30 transition-colors"
+                >
+                  {/* Message Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {getMessageTypeDisplay(
+                        message.messageType,
+                        message.category
+                      )}
+                      {message.title && (
+                        <h4 className="font-medium text-sm truncate">
+                          {message.title}
+                        </h4>
+                      )}
+                    </div>
+                    {shouldTruncate && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleExpanded(message.id)}
+                        className="h-auto p-1 flex-shrink-0"
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
 
-              <div className="text-sm text-foreground">
-                {isExpanded ? (
+                  {/* Message Content */}
                   <div
+                    className="text-sm leading-relaxed"
                     dangerouslySetInnerHTML={{
-                      __html: formatMessageContent(message.content),
+                      __html: formatMessageContent(displayContent),
                     }}
                   />
-                ) : (
-                  <p>{contentPreview}</p>
-                )}
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>By {authorName}</span>
-                  {timeRemaining && (
-                    <>
-                      <span>•</span>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span className="text-amber-600">{timeRemaining}</span>
-                      </div>
-                    </>
-                  )}
+                  {/* Message Footer */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>By {authorName}</span>
+                      {timeRemaining && (
+                        <>
+                          <span>•</span>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span className="text-amber-600">
+                              {timeRemaining}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
 
-                {message.content.length > 150 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleExpanded(message.id)}
-                    className="h-auto p-1"
-                  >
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </Button>
-                )}
-              </div>
+          <div className="flex justify-between items-center pt-4 border-t">
+            <Button variant="ghost" size="sm" onClick={fetchMessages}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+
+            <p className="text-xs text-muted-foreground">
+              Updates every 5 minutes
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Message Sharing Modal/Form */}
+      {showShareForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-background rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Share with Your Church</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowShareForm(false)}
+              >
+                ✕
+              </Button>
             </div>
-          );
-        })}
-
-        <div className="flex justify-between items-center pt-2">
-          <Button variant="ghost" size="sm" onClick={fetchMessages}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-
-          <p className="text-xs text-muted-foreground">
-            Updates every 5 minutes
-          </p>
+            <div className="p-4">
+              <MessageSharingForm
+                onSuccess={() => {
+                  setShowShareForm(false);
+                  fetchMessages(); // Refresh messages after successful share
+                }}
+              />
+            </div>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 }
