@@ -67,7 +67,7 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
     },
     {
       title: "Members Posts",
-      url: "/church/dashboard/members-posts",
+      url: "/church/dashboard/member-posts",
       icon: "FileText" as const,
     },
     {
