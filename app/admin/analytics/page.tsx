@@ -1,6 +1,6 @@
-import { Suspense } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+import ContentTab from "@/components/admin/analytics/ContentTab";
+import InvitationsTab from "@/components/admin/analytics/InvitationsTab";
+import LeaderboardTab from "@/components/admin/analytics/LeaderboardTab";
 import {
   Card,
   CardContent,
@@ -8,9 +8,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClockIcon } from "lucide-react";
-import InvitationsTab from "@/components/admin/analytics/InvitationsTab";
-import LeaderboardTab from "@/components/admin/analytics/LeaderboardTab";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Analytics | Admin Dashboard",
@@ -23,13 +23,14 @@ export default function AdminAnalyticsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
         <p className="text-muted-foreground">
-          Monitor invitation activity and performance metrics
+          Monitor invitation activity, message content, and performance metrics
         </p>
       </div>
 
       <Tabs defaultValue="invitations" className="space-y-4">
         <TabsList>
           <TabsTrigger value="invitations">Invitations</TabsTrigger>
+          <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
         </TabsList>
@@ -37,6 +38,12 @@ export default function AdminAnalyticsPage() {
         <TabsContent value="invitations" className="space-y-4">
           <Suspense fallback={<div>Loading invitations...</div>}>
             <InvitationsTab />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="content" className="space-y-4">
+          <Suspense fallback={<div>Loading content analytics...</div>}>
+            <ContentTab />
           </Suspense>
         </TabsContent>
 

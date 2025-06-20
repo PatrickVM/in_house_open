@@ -14,14 +14,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SidebarNavLink } from "@/components/ui/sidebar-nav-link";
-import {
-  Building2,
-  FileText,
-  LayoutDashboard,
-  Package,
-  Users,
-  BarChart,
-} from "lucide-react";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -62,6 +54,11 @@ export default async function AdminLayout({
       title: "Users",
       url: "/admin/users",
       icon: "Users" as const,
+    },
+    {
+      title: "Platform Messages",
+      url: "/admin/messages",
+      icon: "MessageSquare" as const,
     },
     {
       title: "Items",
