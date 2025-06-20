@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { UserRole } from "@/types";
+import { UserRole } from "@prisma/client";
 import { Shield, ShieldOff, UserCog } from "lucide-react";
 
 interface User {

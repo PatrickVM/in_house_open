@@ -17,9 +17,9 @@ import {
 import { ApplicationActions } from "@/components/admin/ApplicationActions";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ApplicationDetailPage({ params }: PageProps) {
@@ -68,8 +68,8 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
               application.applicationStatus === "PENDING"
                 ? "text-amber-600 border-amber-200 bg-amber-50"
                 : application.applicationStatus === "APPROVED"
-                ? "text-green-600 border-green-200 bg-green-50"
-                : "text-red-600 border-red-200 bg-red-50"
+                  ? "text-green-600 border-green-200 bg-green-50"
+                  : "text-red-600 border-red-200 bg-red-50"
             }
           >
             {application.applicationStatus}
@@ -284,8 +284,8 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
                       application.applicationStatus === "PENDING"
                         ? "text-amber-600 border-amber-200"
                         : application.applicationStatus === "APPROVED"
-                        ? "text-green-600 border-green-200"
-                        : "text-red-600 border-red-200"
+                          ? "text-green-600 border-green-200"
+                          : "text-red-600 border-red-200"
                     }
                   >
                     {application.applicationStatus}

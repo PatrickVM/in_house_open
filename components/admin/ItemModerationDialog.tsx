@@ -44,8 +44,8 @@ interface ItemModerationDialogProps {
     };
     claimer?: {
       id: string;
-      firstName: string;
-      lastName: string;
+      firstName: string | null;
+      lastName: string | null;
       email: string;
     } | null;
   };
@@ -178,7 +178,8 @@ export function ItemModerationDialog({ item }: ItemModerationDialogProps) {
                 <div className="flex items-center">
                   <User className="w-4 h-4 mr-2 text-gray-500" />
                   <span>
-                    Claimed by {item.claimer.firstName} {item.claimer.lastName}
+                    Claimed by {item.claimer.firstName || "Unknown"}{" "}
+                    {item.claimer.lastName || "User"}
                   </span>
                 </div>
               )}
