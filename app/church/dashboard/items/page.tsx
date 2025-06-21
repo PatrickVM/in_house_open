@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import CompleteItemButton from "@/components/church/CompleteItemButton";
 import UnclaimItemButton from "@/components/church/UnclaimItemButton";
+import DeleteItemButton from "@/components/church/DeleteItemButton";
 
 interface ChurchItemsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -359,8 +360,8 @@ export default async function ChurchItemsPage({
                           item.status === "AVAILABLE"
                             ? "text-green-600 border-green-200"
                             : item.status === "CLAIMED"
-                            ? "text-amber-600 border-amber-200"
-                            : "text-blue-600 border-blue-200"
+                              ? "text-amber-600 border-amber-200"
+                              : "text-blue-600 border-blue-200"
                         }
                       >
                         {item.status}
@@ -371,8 +372,8 @@ export default async function ChurchItemsPage({
                           item.moderationStatus === "APPROVED"
                             ? "text-green-600 border-green-200"
                             : item.moderationStatus === "PENDING"
-                            ? "text-yellow-600 border-yellow-200"
-                            : "text-red-600 border-red-200"
+                              ? "text-yellow-600 border-yellow-200"
+                              : "text-red-600 border-red-200"
                         }
                       >
                         {item.moderationStatus}
@@ -545,6 +546,11 @@ export default async function ChurchItemsPage({
                         </Link>
                       </Button>
                     )}
+                    <DeleteItemButton
+                      itemId={item.id}
+                      itemTitle={item.title}
+                      itemStatus={item.status}
+                    />
                   </div>
                 </div>
               </CardContent>
