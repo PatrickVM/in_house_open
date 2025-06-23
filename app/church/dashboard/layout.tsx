@@ -28,6 +28,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SidebarNavLink } from "@/components/ui/sidebar-nav-link";
+import { WalkthroughHelpButton } from "@/lib/walkthrough/components/WalkthroughHelpButton";
 
 interface ChurchLayoutProps {
   children: React.ReactNode;
@@ -54,41 +55,49 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
       title: "Dashboard",
       url: "/church/dashboard",
       icon: "LayoutDashboard" as const,
+      walkthrough: "church-nav-dashboard",
     },
     {
       title: "My Items",
       url: "/church/dashboard/items",
       icon: "Package" as const,
+      walkthrough: "church-nav-items",
     },
     {
       title: "Members",
       url: "/church/dashboard/members",
       icon: "Users" as const,
+      walkthrough: "church-nav-members",
     },
     {
       title: "Members Posts",
       url: "/church/dashboard/member-posts",
       icon: "FileText" as const,
+      walkthrough: "church-nav-member-posts",
     },
     {
       title: "Invitations",
       url: "/church/dashboard/invitations",
       icon: "Send" as const,
+      walkthrough: "church-nav-invitations",
     },
     {
       title: "Area Items",
       url: "/church/dashboard/area-items",
       icon: "MapPin" as const,
+      walkthrough: "church-nav-area-items",
     },
     {
       title: "Daily Messages",
       url: "/church/dashboard/messages",
       icon: "MessageSquare" as const,
+      walkthrough: "church-nav-messages",
     },
     {
       title: "Church Profile",
       url: "/church/dashboard/profile",
       icon: "Settings" as const,
+      walkthrough: "church-nav-profile",
     },
   ];
 
@@ -109,7 +118,11 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
               <SidebarMenu>
                 {navigationItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarNavLink href={item.url} icon={item.icon}>
+                    <SidebarNavLink
+                      href={item.url}
+                      icon={item.icon}
+                      data-walkthrough={item.walkthrough}
+                    >
                       {item.title}
                     </SidebarNavLink>
                   </SidebarMenuItem>
@@ -149,8 +162,11 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
             <h2 className="text-lg font-semibold text-foreground">
               Church Dashboard
             </h2>
-            <div className="text-sm text-muted-foreground">
-              {new Date().toLocaleDateString()}
+            <div className="flex items-center gap-4">
+              <WalkthroughHelpButton />
+              <div className="text-sm text-muted-foreground">
+                {new Date().toLocaleDateString()}
+              </div>
             </div>
           </div>
         </header>

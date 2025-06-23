@@ -70,10 +70,12 @@ export function WalkthroughController() {
 
     findElement();
 
-    // Retry after a delay for dynamically loaded content
+    // Simple retry logic
     const retryTimeout = setTimeout(findElement, 500);
 
-    return () => clearTimeout(retryTimeout);
+    return () => {
+      clearTimeout(retryTimeout);
+    };
   }, [currentStep, isActive]);
 
   // Don't render during loading or when inactive

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   WalkthroughStep,
   getStepsForRole,
+  getMobileOptimizedStepsForRole,
   WALKTHROUGH_VERSION,
 } from "./walkthroughConfig";
 import { UserRole } from "@/auth";
@@ -87,8 +88,11 @@ export function useWalkthrough(): WalkthroughState & WalkthroughActions {
       const userRole = session.user.role as UserRole;
       const userId = session.user.id;
 
-      // Get user's steps for their role
-      const steps = getStepsForRole(userRole);
+      // Check if mobile
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+      // Get user's steps for their role (mobile-optimized if on mobile)
+      const steps = getMobileOptimizedStepsForRole(userRole, isMobile);
       setUserSteps(steps);
 
       // Set language

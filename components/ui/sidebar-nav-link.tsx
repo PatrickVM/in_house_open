@@ -36,9 +36,15 @@ interface SidebarNavLinkProps {
   href: string;
   icon: IconName;
   children: React.ReactNode;
+  "data-walkthrough"?: string;
 }
 
-export function SidebarNavLink({ href, icon, children }: SidebarNavLinkProps) {
+export function SidebarNavLink({
+  href,
+  icon,
+  children,
+  "data-walkthrough": dataWalkthrough,
+}: SidebarNavLinkProps) {
   const { isMobile, setOpenMobile } = useSidebar();
   const IconComponent = iconMap[icon];
 
@@ -50,7 +56,7 @@ export function SidebarNavLink({ href, icon, children }: SidebarNavLinkProps) {
   };
 
   return (
-    <SidebarMenuButton asChild>
+    <SidebarMenuButton asChild data-walkthrough={dataWalkthrough}>
       <Link href={href} onClick={handleClick}>
         <IconComponent className="w-5 h-5" />
         <span>{children}</span>

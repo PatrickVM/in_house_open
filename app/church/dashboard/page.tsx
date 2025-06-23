@@ -85,7 +85,7 @@ export default async function ChurchDashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
-      <div className="space-y-2">
+      <div className="space-y-2" data-walkthrough="church-dashboard-welcome">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Welcome back!
         </h1>
@@ -95,7 +95,10 @@ export default async function ChurchDashboard() {
       </div>
 
       {/* Stats Grid - Mobile: 2 cols, Tablet: 2 cols, Desktop: 4 cols */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+      <div
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6"
+        data-walkthrough="church-stats-overview"
+      >
         <StatCard
           title="Total Items"
           value={stats.totalItems}
@@ -128,7 +131,7 @@ export default async function ChurchDashboard() {
 
       {/* Item Status Breakdown & Recent Activity */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <Card>
+        <Card data-walkthrough="church-item-status-card">
           <CardHeader>
             <CardTitle className="flex items-center text-base md:text-lg">
               <Package className="w-4 h-4 md:w-5 md:h-5 mr-2" />
@@ -176,7 +179,7 @@ export default async function ChurchDashboard() {
         </Card>
 
         {/* Recent Activity */}
-        <Card>
+        <Card data-walkthrough="church-recent-activity-card">
           <CardHeader>
             <CardTitle className="flex items-center text-base md:text-lg">
               <Clock className="w-4 h-4 md:w-5 md:h-5 mr-2" />
@@ -233,7 +236,7 @@ export default async function ChurchDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <Card>
+      <Card data-walkthrough="church-quick-actions-card">
         <CardHeader>
           <CardTitle className="text-base md:text-lg">Quick Actions</CardTitle>
         </CardHeader>
@@ -242,6 +245,7 @@ export default async function ChurchDashboard() {
             <Link
               href="/church/dashboard/items/new"
               className="p-4 border border-border rounded-lg hover:bg-accent transition-colors group"
+              data-walkthrough="church-add-item-action"
             >
               <Plus className="w-6 h-6 md:w-8 md:h-8 text-green-600 mb-2 group-hover:scale-105 transition-transform" />
               <h3 className="font-medium text-sm md:text-base">Add New Item</h3>
