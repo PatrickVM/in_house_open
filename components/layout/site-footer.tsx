@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HomeIcon } from "lucide-react";
+import { WalkthroughHelpButton } from "@/lib/walkthrough/components/WalkthroughHelpButton";
 
 export function SiteFooter() {
   return (
@@ -11,13 +12,14 @@ export function SiteFooter() {
             © {new Date().getFullYear()} In-House. All rights reserved.
           </p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
           <Link
             href="/directory"
             className="text-sm text-muted-foreground hover:underline underline-offset-4"
           >
             Directory
           </Link>
+          <WalkthroughHelpButton />
         </div>
       </div>
     </footer>

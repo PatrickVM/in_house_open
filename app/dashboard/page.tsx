@@ -171,7 +171,7 @@ export default async function UserDashboard({
 
   return (
     <div className="container mx-auto px-4 py-6 md:py-8 max-w-6xl">
-      <div className="mb-6 md:mb-8">
+      <div className="mb-6 md:mb-8" data-walkthrough="dashboard-welcome">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
           Welcome back, {user.firstName || user.email}!
         </h1>
@@ -206,7 +206,7 @@ export default async function UserDashboard({
         <div className="lg:col-span-2 space-y-6">
           {/* Conditional Content: Getting Started OR Daily Messages */}
           {showGettingStarted && (
-            <Card>
+            <Card data-walkthrough="getting-started-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -295,7 +295,7 @@ export default async function UserDashboard({
           )}
 
           {/* Church Status Card */}
-          <Card>
+          <Card data-walkthrough="church-community-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <Church className="w-4 h-4 md:w-5 md:h-5" />
@@ -388,7 +388,7 @@ export default async function UserDashboard({
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Profile Completion */}
-          <Card>
+          <Card data-walkthrough="profile-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <User className="w-4 h-4 md:w-5 md:h-5" />
@@ -418,7 +418,7 @@ export default async function UserDashboard({
           </Card>
 
           {/* Quick Actions */}
-          <Card>
+          <Card data-walkthrough="quick-actions-card">
             <CardHeader>
               <CardTitle className="text-base md:text-lg">
                 Quick Actions
@@ -442,6 +442,7 @@ export default async function UserDashboard({
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
+                data-walkthrough="directory-button"
               >
                 <Link href="/directory">
                   <Users className="w-4 h-4 mr-2" />

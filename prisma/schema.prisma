@@ -62,6 +62,10 @@ model User {
   moderatedMessages   Message[]         @relation("ModeratedMessages")
   pollResponses       PollResponse[]    @relation("PollResponses")
   formResponses       FormResponse[]    @relation("FormResponses")
+  
+  // Walkthrough relations
+  walkthroughProgress   WalkthroughProgress[]   @relation("WalkthroughProgress")
+  walkthroughAnalytics  WalkthroughAnalytics[]  @relation("WalkthroughAnalytics")
 }
 
 model Account {
@@ -321,16 +325,43 @@ model PollResponse {
 }
 
 model FormResponse {
-  id              String            @id @default(cuid())
-  formId          String
-  userId          String
-  responses       Json              // Form responses data
-  createdAt       DateTime          @default(now())
+  id            String              @id @default(cuid())
+  formId        String              // References the MessageForm
+  responderId   String              // User who filled out the form
+  responses     Json                // Form field responses
+  submittedAt   DateTime            @default(now())
   
-  form            MessageForm       @relation(fields: [formId], references: [id])
-  user            User              @relation("FormResponses", fields: [userId], references: [id])
+  form          MessageForm         @relation(fields: [formId], references: [id])
+  responder     User                @relation("FormResponses", fields: [responderId], references: [id])
   
-  @@unique([formId, userId])
+  @@unique([formId, responderId])
+}
+
+model WalkthroughProgress {
+  id           String   @id @default(cuid())
+  userId       String
+  stepId       String
+  completed    Boolean  @default(false)
+  skipped      Boolean  @default(false)
+  version      String   // e.g., "walkthrough_v1"
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+  
+  user         User     @relation("WalkthroughProgress", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, stepId, version])
+}
+
+model WalkthroughAnalytics {
+  id           String   @id @default(cuid())
+  userId       String
+  stepId       String
+  action       String   // "started" | "completed" | "skipped" | "error"
+  errorMessage String?
+  timestamp    DateTime @default(now())
+  userRole     String
+  
+  user         User     @relation("WalkthroughAnalytics", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum UserRole {

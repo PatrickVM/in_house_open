@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "next-themes";
 import { SiteLayout } from "@/components/layout/site-layout";
+import { Toaster } from "@/components/ui/sonner";
+import { WalkthroughProvider } from "@/lib/walkthrough/WalkthroughProvider";
 
 export const metadata: Metadata = {
   title: "In-House - Community Directory",
@@ -23,7 +25,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SiteLayout>{children}</SiteLayout>
+          <SiteLayout>
+            <WalkthroughProvider>{children}</WalkthroughProvider>
+          </SiteLayout>
           <Toaster position="top-right" />
         </ThemeProvider>
       </body>
