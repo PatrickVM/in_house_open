@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { UserRole } from "@/auth";
 import { trackInviteCodeRegistration } from "@/lib/invite-analytics";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 // Validation schema for registration
 const registerSchema = z.object({
@@ -80,6 +81,20 @@ export async function POST(req: Request) {
         console.error("Failed to track invite code registration:", error);
         // Don't fail registration if analytics tracking fails
       }
+    }
+
+    // Log user registration to ActivityLog
+    try {
+      const userName = email; // Use email as name since first/lastName not available at registration
+      await ActivityLogService.logUserRegistration(
+        user.id,
+        userName,
+        email,
+        inviteCode ? "invite_code" : "direct_signup"
+      );
+    } catch (error) {
+      console.error("Failed to log user registration:", error);
+      // Don't fail registration if activity logging fails
     }
 
     // Remove sensitive data

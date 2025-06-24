@@ -1,3 +1,5 @@
+import { ActivityLogService } from "@/lib/activity-logs/service";
+
 export type WalkthroughAction = "started" | "completed" | "skipped" | "error";
 
 export interface WalkthroughEvent {
@@ -91,4 +93,62 @@ export async function logWalkthroughError(
     userRole,
     errorMessage,
   });
+}
+
+/**
+ * Log overall walkthrough completion to activity logs
+ * This is called when the user completes ALL walkthrough steps
+ */
+export async function logWalkthroughCompletion(
+  userId: string,
+  userRole: "USER" | "CHURCH",
+  userName: string,
+  userEmail: string,
+  stepCount: number,
+  startTime: number, // timestamp when walkthrough started
+  version: string = "v1"
+): Promise<void> {
+  try {
+    const completionTime = Math.round((Date.now() - startTime) / 1000);
+
+    await ActivityLogService.logWalkthroughCompletion(
+      userId,
+      userRole,
+      userName,
+      userEmail,
+      stepCount,
+      completionTime,
+      version
+    );
+  } catch (error) {
+    console.error(
+      "Failed to log walkthrough completion to activity logs:",
+      error
+    );
+    // Don't throw error to avoid breaking the walkthrough flow
+  }
+}
+
+/**
+ * Log walkthrough start to activity logs
+ */
+export async function logWalkthroughStartActivity(
+  userId: string,
+  userRole: "USER" | "CHURCH",
+  userName: string,
+  userEmail: string,
+  version: string = "v1"
+): Promise<void> {
+  try {
+    await ActivityLogService.logWalkthroughStart(
+      userId,
+      userRole,
+      userName,
+      userEmail,
+      version
+    );
+  } catch (error) {
+    console.error("Failed to log walkthrough start to activity logs:", error);
+    // Don't throw error to avoid breaking the walkthrough flow
+  }
 }

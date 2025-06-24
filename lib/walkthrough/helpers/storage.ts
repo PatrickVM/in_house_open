@@ -7,6 +7,7 @@ export interface WalkthroughStorageData {
   skippedSteps: string[];
   version: string;
   lastActiveAt: number;
+  startTime?: number; // Track when walkthrough was started
 }
 
 const STORAGE_KEY = "inhouse_walkthrough";
@@ -36,6 +37,7 @@ export function getLocalWalkthroughData(): WalkthroughStorageData | null {
       skippedSteps: data.skippedSteps,
       version: data.version,
       lastActiveAt: data.lastActiveAt,
+      startTime: data.startTime,
     };
   } catch (error) {
     console.error("Error reading walkthrough data from localStorage:", error);

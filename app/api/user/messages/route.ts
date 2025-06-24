@@ -4,6 +4,7 @@ import { authOptions } from "@/auth";
 import { db } from "@/lib/db";
 import { createUserMessageSchema } from "@/lib/validators/message";
 import { calculateExpirationDate } from "@/lib/messages";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,6 +80,33 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Log content posted to ActivityLog
+    try {
+      const userName =
+        user.firstName && user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : user.email;
+
+      // Use first 50 characters of content as title
+      const contentTitle =
+        validatedData.content.length > 50
+          ? validatedData.content.substring(0, 50) + "..."
+          : validatedData.content;
+
+      await ActivityLogService.logContentPosted(
+        session.user.id,
+        "USER",
+        userName,
+        user.email,
+        "message",
+        message.id,
+        contentTitle
+      );
+    } catch (error) {
+      console.error("Failed to log content posted:", error);
+      // Don't fail message creation if activity logging fails
+    }
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {

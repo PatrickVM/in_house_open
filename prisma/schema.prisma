@@ -66,6 +66,7 @@ model User {
   // Walkthrough relations
   walkthroughProgress   WalkthroughProgress[]   @relation("WalkthroughProgress")
   walkthroughAnalytics  WalkthroughAnalytics[]  @relation("WalkthroughAnalytics")
+  activityLogs          ActivityLog[]           @relation("ActivityLogs")
 }
 
 model Account {
@@ -362,6 +363,27 @@ model WalkthroughAnalytics {
   userRole     String
   
   user         User     @relation("WalkthroughAnalytics", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String   
+  userRole    String   // USER, CHURCH, ADMIN
+  userName    String   // Cached for performance
+  userEmail   String   // Cached for performance
+  category    String   // walkthrough, invitation, church, content, user, admin
+  action      String   // completed_walkthrough, sent_invitation, etc.
+  description String   // Human-readable description
+  details     Json?    // Structured data (stepCount, completionTime, etc.)
+  metadata    Json?    // Extra context (IP, userAgent, etc.)
+  timestamp   DateTime @default(now())
+  
+  user        User     @relation("ActivityLogs", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([category, action])
+  @@index([timestamp])
+  @@index([category, timestamp])
 }
 
 enum UserRole {

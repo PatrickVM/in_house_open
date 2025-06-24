@@ -11,6 +11,7 @@ import {
   validateMessageConstraints,
 } from "@/lib/messages";
 import { MESSAGE_CONSTRAINTS } from "@/types/message";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -223,6 +224,41 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Log content posted to ActivityLog
+    try {
+      const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { firstName: true, lastName: true, email: true },
+      });
+
+      if (user) {
+        const userName =
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.email;
+
+        // Use title or first 50 characters of content as title
+        const contentTitle =
+          validatedData.title ||
+          (validatedData.content.length > 50
+            ? validatedData.content.substring(0, 50) + "..."
+            : validatedData.content);
+
+        await ActivityLogService.logContentPosted(
+          session.user.id,
+          "CHURCH",
+          userName,
+          user.email,
+          "message",
+          message.id,
+          contentTitle
+        );
+      }
+    } catch (error) {
+      console.error("Failed to log content posted:", error);
+      // Don't fail message creation if activity logging fails
+    }
 
     return NextResponse.json({ message }, { status: 201 });
   } catch (error) {

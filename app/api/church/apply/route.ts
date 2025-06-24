@@ -7,6 +7,7 @@ import {
   type ChurchApplicationValues,
 } from "@/lib/validators/church-application";
 import { z } from "zod";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 export async function POST(req: Request) {
   try {
@@ -69,6 +70,32 @@ export async function POST(req: Request) {
         longitude: manualLongitude, // Using manually set longitude
       },
     });
+
+    // Log church application submitted to ActivityLog
+    try {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { firstName: true, lastName: true, email: true },
+      });
+
+      if (user) {
+        const userName =
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.email;
+
+        await ActivityLogService.logChurchApplicationSubmitted(
+          userId,
+          userName,
+          user.email,
+          churchData.name,
+          newChurchApplication.id
+        );
+      }
+    } catch (error) {
+      console.error("Failed to log church application submitted:", error);
+      // Don't fail application if activity logging fails
+    }
 
     return NextResponse.json(
       {

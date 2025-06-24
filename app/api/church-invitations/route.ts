@@ -6,6 +6,7 @@ import { authOptions } from "@/auth";
 import { emailService } from "@/lib/email/email-service";
 import { churchInvitationSchema } from "@/lib/validators/church-invitation";
 import { ChurchInvitationEmail } from "@/lib/email/templates/church-invitation";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -115,6 +116,22 @@ export async function POST(request: NextRequest) {
         { error: `Failed to send invitation email: ${emailResult.error}` },
         { status: 500 }
       );
+    }
+
+    // Log invitation sent to ActivityLog
+    try {
+      await ActivityLogService.logInvitationSent(
+        user.id,
+        "USER", // User role since only verified users can send invitations
+        userName,
+        user.email,
+        validatedData.churchEmail,
+        "church",
+        invitation.id
+      );
+    } catch (error) {
+      console.error("Failed to log invitation sent:", error);
+      // Don't fail invitation if activity logging fails
     }
 
     // Update invitation analytics

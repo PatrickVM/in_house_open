@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { churchSignupSchema } from "@/lib/validators/church-invitation";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 interface RouteParams {
   params: Promise<{
@@ -187,6 +188,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       return { user, church };
     });
+
+    // Log church application submitted to ActivityLog
+    try {
+      const userName = `${validatedData.firstName} ${validatedData.lastName}`;
+      await ActivityLogService.logChurchApplicationSubmitted(
+        result.user.id,
+        userName,
+        validatedData.email,
+        validatedData.churchName,
+        result.church.id
+      );
+    } catch (error) {
+      console.error("Failed to log church application submitted:", error);
+      // Don't fail signup if activity logging fails
+    }
 
     return NextResponse.json({
       success: true,

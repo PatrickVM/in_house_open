@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 const createItemSchema = z.object({
   title: z.string().min(1).max(100),
@@ -64,6 +65,34 @@ export async function POST(request: NextRequest) {
         moderationStatus: "APPROVED", // Churches can post directly without moderation
       },
     });
+
+    // Log content posted to ActivityLog
+    try {
+      const user = await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { firstName: true, lastName: true, email: true },
+      });
+
+      if (user) {
+        const userName =
+          user.firstName && user.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user.email;
+
+        await ActivityLogService.logContentPosted(
+          session.user.id,
+          "CHURCH",
+          userName,
+          user.email,
+          "item",
+          item.id,
+          validatedData.title
+        );
+      }
+    } catch (error) {
+      console.error("Failed to log content posted:", error);
+      // Don't fail item creation if activity logging fails
+    }
 
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {

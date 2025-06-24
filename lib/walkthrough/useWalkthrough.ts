@@ -22,6 +22,8 @@ import {
   logWalkthroughComplete,
   logWalkthroughSkip,
   logWalkthroughError,
+  logWalkthroughCompletion,
+  logWalkthroughStartActivity,
 } from "./helpers/analytics";
 import {
   getStoredLanguage,
@@ -167,10 +169,37 @@ export function useWalkthrough(): WalkthroughState & WalkthroughActions {
   const startWalkthrough = useCallback(() => {
     if (!session?.user || userSteps.length === 0) return;
 
+    const startTime = Date.now();
     setIsActive(true);
     setCurrentStepIndex(0);
 
+    // Update local storage with start time
+    const localData = getLocalWalkthroughData();
+    const storageData: WalkthroughStorageData = {
+      ...localData,
+      currentStepIndex: 0,
+      completedSteps: localData?.completedSteps || [],
+      skippedSteps: localData?.skippedSteps || [],
+      version: WALKTHROUGH_VERSION,
+      lastActiveAt: startTime,
+      startTime, // Track start time
+    };
+    saveLocalWalkthroughData(storageData);
+
+    // Log walkthrough start
     logWalkthroughStart(session.user.id, session.user.role, userSteps[0].id);
+
+    // Log to activity logs
+    if (session.user.name && session.user.email) {
+      const userName = session.user.name;
+      logWalkthroughStartActivity(
+        session.user.id,
+        session.user.role as "USER" | "CHURCH",
+        userName,
+        session.user.email,
+        WALKTHROUGH_VERSION
+      );
+    }
   }, [session, userSteps]);
 
   const nextStep = useCallback(() => {
@@ -208,6 +237,28 @@ export function useWalkthrough(): WalkthroughState & WalkthroughActions {
           lastActiveAt: Date.now(),
         };
         saveLocalWalkthroughData(updatedData);
+
+        // Check if this is the final step (walkthrough completed)
+        const isLastStep = currentStepIndex === userSteps.length - 1;
+        if (
+          isLastStep &&
+          localData.startTime &&
+          session.user.name &&
+          session.user.email
+        ) {
+          const userName = session.user.name;
+
+          // Log overall walkthrough completion to activity logs
+          await logWalkthroughCompletion(
+            session.user.id,
+            session.user.role as "USER" | "CHURCH",
+            userName,
+            session.user.email,
+            userSteps.length,
+            localData.startTime,
+            WALKTHROUGH_VERSION
+          );
+        }
       }
 
       nextStep();
@@ -220,7 +271,7 @@ export function useWalkthrough(): WalkthroughState & WalkthroughActions {
         error instanceof Error ? error.message : "Failed to complete step"
       );
     }
-  }, [session, currentStep, nextStep]);
+  }, [session, currentStep, nextStep, currentStepIndex, userSteps.length]);
 
   const skipStep = useCallback(async () => {
     if (!session?.user || !currentStep) return;
@@ -264,21 +315,35 @@ export function useWalkthrough(): WalkthroughState & WalkthroughActions {
   const restartWalkthrough = useCallback(() => {
     if (!session?.user) return;
 
+    const startTime = Date.now();
     setCurrentStepIndex(0);
     setIsActive(true);
 
-    // Clear local storage
+    // Clear local storage with new start time
     const storageData: WalkthroughStorageData = {
       currentStepIndex: 0,
       completedSteps: [],
       skippedSteps: [],
       version: WALKTHROUGH_VERSION,
-      lastActiveAt: Date.now(),
+      lastActiveAt: startTime,
+      startTime, // Track restart time
     };
     saveLocalWalkthroughData(storageData);
 
     if (userSteps.length > 0) {
       logWalkthroughStart(session.user.id, session.user.role, userSteps[0].id);
+
+      // Log restart to activity logs
+      if (session.user.name && session.user.email) {
+        const userName = session.user.name;
+        logWalkthroughStartActivity(
+          session.user.id,
+          session.user.role as "USER" | "CHURCH",
+          userName,
+          session.user.email,
+          WALKTHROUGH_VERSION
+        );
+      }
     }
   }, [session, userSteps]);
 
