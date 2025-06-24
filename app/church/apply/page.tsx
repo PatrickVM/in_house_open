@@ -59,15 +59,11 @@ export default async function ApplyChurchPage() {
     values: ChurchApplicationValues & { consent: boolean }
   ) => {
     "use server";
-    console.log("Server Action: handleApply entered with values:", values);
 
     try {
       const session = await getServerSession(authOptions); // Get session within the server action
 
       if (!session?.user?.id) {
-        console.error(
-          "Server Action: Unauthorized - No session or user ID found."
-        );
         return {
           success: false,
           message: "Unauthorized. Please log in again.",
@@ -75,7 +71,6 @@ export default async function ApplyChurchPage() {
       }
 
       const userId = session.user.id;
-      console.log("Server Action: Authenticated User ID:", userId);
 
       // Check if this user already has a pending or approved church application
       // or is already a lead contact for a church.
@@ -91,9 +86,6 @@ export default async function ApplyChurchPage() {
         if (existingChurchForUser.applicationStatus === "PENDING") {
           message = "You already have a pending church application.";
         }
-        console.warn(
-          `Server Action: User ${userId} attempt to apply with existing church: ${existingChurchForUser.id}, status: ${existingChurchForUser.applicationStatus}`
-        );
         return { success: false, message }; // 409 Conflict equivalent
       }
 
@@ -107,10 +99,6 @@ export default async function ApplyChurchPage() {
       const validationResult = fullSchema.safeParse(values);
 
       if (!validationResult.success) {
-        console.error(
-          "Server Action: Validation failed",
-          validationResult.error.flatten()
-        );
         // Taking the first error message for simplicity, or concatenate them
         const firstErrorMessage =
           validationResult.error.errors[0]?.message || "Invalid input.";
@@ -136,9 +124,7 @@ export default async function ApplyChurchPage() {
           longitude: manualLongitude,
         },
       });
-      console.log(
-        `Server Action: Church application created successfully for user ${userId}, church ID: ${newChurchApplication.id}`
-      );
+
       return {
         success: true,
         message: "Church application submitted successfully!",

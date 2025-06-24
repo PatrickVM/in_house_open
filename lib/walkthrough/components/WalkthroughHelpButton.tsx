@@ -8,10 +8,10 @@ import { useWalkthrough } from "../useWalkthrough";
 
 export function WalkthroughHelpButton() {
   const { data: session } = useSession();
-  const { restartWalkthrough, isActive } = useWalkthrough();
+  const { restartWalkthrough } = useWalkthrough();
 
   // Only show for authenticated users
-  if (!session?.user || isActive) {
+  if (!session?.user) {
     return null;
   }
 

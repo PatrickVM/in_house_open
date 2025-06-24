@@ -99,7 +99,7 @@ export function useWalkthrough(): WalkthroughState & WalkthroughActions {
       setLanguageState(getStoredLanguage());
 
       // Check if this is first time user
-      const isFirstTime = await isFirstTimeUser();
+      const isFirstTime = await isFirstTimeUser(userRole);
 
       if (isFirstTime && steps.length > 0) {
         // Start walkthrough for first-time users

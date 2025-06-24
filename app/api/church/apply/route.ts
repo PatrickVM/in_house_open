@@ -9,7 +9,6 @@ import {
 import { z } from "zod";
 
 export async function POST(req: Request) {
-  console.log("API ROUTE HANDLER ENTERED: /api/church/apply");
   try {
     const session = await getServerSession(authOptions);
 

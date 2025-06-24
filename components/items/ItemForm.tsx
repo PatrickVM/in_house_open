@@ -107,11 +107,6 @@ export default function ItemForm({ onSuccess }: { onSuccess?: () => void }) {
         setUseMyLocation(true);
         toast.success("Location obtained");
         // In a real implementation, we would store these coordinates
-        console.log(
-          "Coordinates:",
-          position.coords.latitude,
-          position.coords.longitude
-        );
       },
       (error) => {
         console.error("Error getting location:", error);

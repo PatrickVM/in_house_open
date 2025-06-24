@@ -1,4 +1,5 @@
-import { WALKTHROUGH_VERSION } from "../walkthroughConfig";
+import { WALKTHROUGH_VERSION, getStepsForRole } from "../walkthroughConfig";
+import { UserRole } from "@/auth";
 
 export interface WalkthroughStorageData {
   currentStepIndex: number;
@@ -146,15 +147,65 @@ export async function saveStepProgress(
   }
 }
 
-export async function isFirstTimeUser(): Promise<boolean> {
+// Helper function to check if walkthrough is fully completed for a user role
+export function isWalkthroughCompleted(
+  completedSteps: string[],
+  userRole: UserRole
+): boolean {
+  try {
+    // Get all required steps for the user's role
+    const requiredSteps = getStepsForRole(userRole);
+    const requiredStepIds = requiredSteps.map((step) => step.id);
+
+    // Check if ALL required steps are completed
+    const isFullyCompleted = requiredStepIds.every((stepId) =>
+      completedSteps.includes(stepId)
+    );
+
+    return isFullyCompleted;
+  } catch (error) {
+    console.error("Error checking walkthrough completion:", error);
+    // Fallback to false (not completed) on error
+    return false;
+  }
+}
+
+// Updated function that checks if user needs to see walkthrough
+export async function isFirstTimeUser(userRole?: UserRole): Promise<boolean> {
   try {
     const progress = await getUserWalkthroughProgress();
-    return progress?.isFirstTime || true;
+
+    // If no progress data, definitely first time
+    if (!progress) return true;
+
+    // If no user role provided, fall back to old behavior
+    if (!userRole) {
+      return progress.isFirstTime || true;
+    }
+
+    // Check if user has completed ALL required steps for their role
+    const isCompleted = isWalkthroughCompleted(
+      progress.completedSteps,
+      userRole
+    );
+
+    // Return true (is first time) if walkthrough is NOT completed
+    return !isCompleted;
   } catch (error) {
     console.error("Error checking first time user:", error);
+
     // Fallback to localStorage check
     const localData = getLocalWalkthroughData();
-    return !localData || localData.completedSteps.length === 0;
+    if (!localData || !userRole) {
+      return !localData || localData.completedSteps.length === 0;
+    }
+
+    // Check completion against localStorage data
+    const isCompleted = isWalkthroughCompleted(
+      localData.completedSteps,
+      userRole
+    );
+    return !isCompleted;
   }
 }
 
@@ -176,4 +227,29 @@ export async function resetWalkthroughProgress(): Promise<void> {
     console.error("Error resetting walkthrough progress:", error);
     throw error;
   }
+}
+
+// Utility function for testing/debugging completion logic
+export function debugWalkthroughCompletion(
+  completedSteps: string[],
+  userRole: UserRole
+): {
+  requiredSteps: string[];
+  completedSteps: string[];
+  missingSteps: string[];
+  isCompleted: boolean;
+} {
+  const requiredSteps = getStepsForRole(userRole);
+  const requiredStepIds = requiredSteps.map((step) => step.id);
+  const missingSteps = requiredStepIds.filter(
+    (stepId) => !completedSteps.includes(stepId)
+  );
+  const isCompleted = missingSteps.length === 0;
+
+  return {
+    requiredSteps: requiredStepIds,
+    completedSteps,
+    missingSteps,
+    isCompleted,
+  };
 }
