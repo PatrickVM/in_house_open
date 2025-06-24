@@ -159,8 +159,8 @@ export default function RegistrationWithInvite({
                 Create your account
               </CardTitle>
               <CardDescription className="text-center">
-                Join our trusted community and connect with local service
-                providers
+                Join your community of faith and find local service providers
+                from your own church family
               </CardDescription>
             </CardHeader>
             <CardContent>
