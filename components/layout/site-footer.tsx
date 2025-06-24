@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { HomeIcon } from "lucide-react";
-import { WalkthroughHelpButton } from "@/lib/walkthrough/components/WalkthroughHelpButton";
+// import { WalkthroughHelpButton } from "@/lib/walkthrough/components/WalkthroughHelpButton";
 
 export function SiteFooter() {
   return (
@@ -19,7 +19,7 @@ export function SiteFooter() {
           >
             Directory
           </Link>
-          <WalkthroughHelpButton />
+          {/* <WalkthroughHelpButton /> */}
         </div>
       </div>
     </footer>

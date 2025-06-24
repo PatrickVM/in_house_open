@@ -28,7 +28,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { SidebarNavLink } from "@/components/ui/sidebar-nav-link";
-import { WalkthroughHelpButton } from "@/lib/walkthrough/components/WalkthroughHelpButton";
+// import { WalkthroughHelpButton } from "@/lib/walkthrough/components/WalkthroughHelpButton";
 
 interface ChurchLayoutProps {
   children: React.ReactNode;
@@ -163,7 +163,7 @@ export default async function ChurchLayout({ children }: ChurchLayoutProps) {
               Church Dashboard
             </h2>
             <div className="flex items-center gap-4">
-              <WalkthroughHelpButton />
+              {/* <WalkthroughHelpButton /> */}
               <div className="text-sm text-muted-foreground">
                 {new Date().toLocaleDateString()}
               </div>
