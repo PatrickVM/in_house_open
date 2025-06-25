@@ -40,7 +40,7 @@ export default function HomePage() {
                       </p>
                       <div className="flex items-center gap-2 text-sm">
                         <UsersIcon className="h-4 w-4 text-blue-500" />
-                        <span>First Community Church</span>
+                        <span>Echo Community Church</span>
                       </div>
                     </div>
                   </div>
@@ -52,7 +52,7 @@ export default function HomePage() {
                       </p>
                       <div className="flex items-center gap-2 text-sm">
                         <UsersIcon className="h-4 w-4 text-blue-500" />
-                        <span>Grace Chapel</span>
+                        <span>Mercy Chapel</span>
                       </div>
                     </div>
                   </div>

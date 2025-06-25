@@ -50,11 +50,11 @@ export const metadata: Metadata = {
     description:
       "Intentionally connecting internally to creatively connect outwardly.",
     images: ["/icon.svg"],
-    creator: "@inhouseapp", // Update with your actual Twitter handle if you have one
+    creator: "@cyams34",
   },
 
   // Additional meta tags
-  metadataBase: new URL("https://your-domain.com"), // Update this with your actual domain
+  metadataBase: new URL("https://in-house.tech"),
   alternates: {
     canonical: "/",
   },
