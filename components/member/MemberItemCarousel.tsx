@@ -201,14 +201,15 @@ export default function MemberItemCarousel({
   return (
     <TooltipProvider>
       <Card className={className}>
-        <CardHeader>
+        <CardHeader className="pb-3 sm:pb-6">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Available Church Items
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Available Church Items</span>
+              <span className="sm:hidden">Available Items</span>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="w-4 h-4 text-muted-foreground cursor-help" />
+                  <Info className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Items shared by your church leaders</p>
@@ -216,8 +217,8 @@ export default function MemberItemCarousel({
                 </TooltipContent>
               </Tooltip>
             </CardTitle>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Badge variant="outline" className="text-xs px-1.5 sm:px-2">
                 {currentIndex + 1} of {items.length}
               </Badge>
               <Button
@@ -225,8 +226,11 @@ export default function MemberItemCarousel({
                 variant="ghost"
                 size="sm"
                 disabled={refreshing}
+                className="h-6 w-6 sm:h-8 sm:w-8 p-0"
               >
-                {refreshing ? "..." : "↻"}
+                <span className="text-xs sm:text-sm">
+                  {refreshing ? "..." : "↻"}
+                </span>
               </Button>
             </div>
           </div>
@@ -256,39 +260,47 @@ export default function MemberItemCarousel({
             )}
 
             {/* Item content */}
-            <div className="px-8">
-              <div className="space-y-4">
+            <div className="px-4 sm:px-8">
+              <div className="space-y-3">
                 <div>
-                  <h3 className="font-semibold text-lg">{currentItem.title}</h3>
+                  <h3 className="font-semibold text-base sm:text-lg leading-tight">
+                    {currentItem.title}
+                  </h3>
                   {currentItem.memberDescription && (
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
                       {currentItem.memberDescription}
                     </p>
                   )}
                 </div>
 
                 {currentItem.description && (
-                  <p className="text-sm">{currentItem.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed line-clamp-2">
+                    {currentItem.description}
+                  </p>
                 )}
 
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <span>{formatLocation(currentItem)}</span>
+                {/* Location - more compact */}
+                <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <span className="truncate">
+                    {formatLocation(currentItem)}
+                  </span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant={
-                        itemStatus.status === "available"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className="text-xs"
-                    >
-                      {itemStatus.message}
-                    </Badge>
-                  </div>
+                {/* Status and Action - more compact layout */}
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <Badge
+                    variant={
+                      itemStatus.status === "available"
+                        ? "default"
+                        : "secondary"
+                    }
+                    className="text-xs px-2 py-0.5 flex-shrink-0"
+                  >
+                    {itemStatus.status === "available"
+                      ? "Available"
+                      : "Requested"}
+                  </Badge>
 
                   <RequestItemButton
                     item={currentItem}
@@ -297,15 +309,19 @@ export default function MemberItemCarousel({
                   />
                 </div>
 
-                {/* Contact info */}
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">
-                    Contact: {currentItem.church.leadContact.firstName}{" "}
-                    {currentItem.church.leadContact.lastName}
+                {/* Contact info - simplified and compact */}
+                <div className="pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="truncate">
+                      Contact: {currentItem.church.leadContact.firstName}{" "}
+                      {currentItem.church.leadContact.lastName}
+                    </span>
                     {currentItem.church.leadContact.phone && (
-                      <span> • {currentItem.church.leadContact.phone}</span>
+                      <span className="ml-2 flex-shrink-0 font-mono">
+                        {currentItem.church.leadContact.phone}
+                      </span>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>

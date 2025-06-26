@@ -62,6 +62,12 @@ export async function POST(
     const item = await db.item.findUnique({
       where: { id: itemId },
       include: {
+        claimer: {
+          select: {
+            id: true,
+            churchId: true,
+          },
+        },
         memberRequests: {
           where: {
             status: {
@@ -79,7 +85,7 @@ export async function POST(
     // Validate item eligibility
     if (
       item.status !== "CLAIMED" ||
-      item.churchId !== user.church.id ||
+      item.claimer?.churchId !== user.church.id ||
       !item.offerToMembers ||
       item.moderationStatus !== "APPROVED"
     ) {

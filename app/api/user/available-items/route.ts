@@ -37,15 +37,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Get items that meet all criteria:
-    // - Claimed by member's church
+    // - Claimed by someone from member's church
     // - Offered to members
     // - Approved moderation status
     const items = await db.item.findMany({
       where: {
-        churchId: user.church.id,
         status: "CLAIMED",
         offerToMembers: true,
         moderationStatus: "APPROVED",
+        claimer: {
+          churchId: user.church.id,
+        },
       },
       include: {
         church: {
@@ -61,6 +63,16 @@ export async function GET(request: NextRequest) {
                 phone: true,
               },
             },
+          },
+        },
+        claimer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            churchId: true,
           },
         },
         memberRequests: {
