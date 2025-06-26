@@ -141,15 +141,20 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const whereClause: any = {
-      churchId: church.id,
+      OR: [
+        { churchId: church.id }, // Items I posted
+        { claimerId: session.user.id }, // Items I claimed
+      ],
     };
 
     if (status && status !== "all") {
-      whereClause.status = status;
+      whereClause.AND = whereClause.AND || [];
+      whereClause.AND.push({ status: status });
     }
 
     if (moderation && moderation !== "all") {
-      whereClause.moderationStatus = moderation;
+      whereClause.AND = whereClause.AND || [];
+      whereClause.AND.push({ moderationStatus: moderation });
     }
 
     // Get items

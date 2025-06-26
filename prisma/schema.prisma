@@ -67,6 +67,9 @@ model User {
   walkthroughProgress   WalkthroughProgress[]   @relation("WalkthroughProgress")
   walkthroughAnalytics  WalkthroughAnalytics[]  @relation("WalkthroughAnalytics")
   activityLogs          ActivityLog[]           @relation("ActivityLogs")
+  
+  // New relation for member item requests
+  itemRequests            MemberItemRequest[] @relation("UserItemRequests")
 }
 
 model Account {
@@ -136,6 +139,13 @@ model Item {
   claimer          User?      @relation("ItemClaimer", fields: [claimerId], references: [id])
   churchId         String     // Added: Foreign key to Church
   church           Church     @relation("ChurchItems", fields: [churchId], references: [id]) // Added: Relation to Church
+  
+  // New fields for member offering
+  offerToMembers      Boolean @default(false)
+  memberDescription   String? // Church lead description for members
+  
+  // New relation for member requests
+  memberRequests      MemberItemRequest[] @relation("ItemMemberRequests")
 }
 
 model Church {
@@ -166,6 +176,9 @@ model Church {
   
   // Message relations
   messages            Message[]           @relation("ChurchMessages")
+  
+  // New relation for member item requests
+  memberRequests      MemberItemRequest[] @relation("ChurchMemberRequests")
   
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
@@ -386,6 +399,27 @@ model ActivityLog {
   @@index([category, timestamp])
 }
 
+// New model for member item requests
+model MemberItemRequest {
+  id          String   @id @default(cuid())
+  itemId      String   // FK to Item
+  userId      String   // FK to User (requesting member)
+  churchId    String   // FK to Church (for validation)
+  requestedAt DateTime @default(now())
+  expiresAt   DateTime // Auto-calculated: requestedAt + 7 days
+  status      MemberRequestStatus @default(REQUESTED)
+  memberNotes String?  // Optional notes from member
+  
+  item        Item     @relation("ItemMemberRequests", fields: [itemId], references: [id], onDelete: Cascade)
+  user        User     @relation("UserItemRequests", fields: [userId], references: [id], onDelete: Cascade)
+  church      Church   @relation("ChurchMemberRequests", fields: [churchId], references: [id], onDelete: Cascade)
+  
+  @@unique([itemId, userId]) // Prevent duplicate requests
+  @@index([userId, status])
+  @@index([churchId, status])
+  @@index([expiresAt])
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -469,4 +503,11 @@ enum ModerationStatus {
   APPROVED          // Manually approved by admin
   REJECTED          // Rejected by admin
   FLAGGED           // Flagged for review
+}
+
+enum MemberRequestStatus {
+  REQUESTED
+  RECEIVED
+  CANCELLED
+  EXPIRED
 }

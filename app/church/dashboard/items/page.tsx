@@ -23,6 +23,8 @@ import {
 import CompleteItemButton from "@/components/church/CompleteItemButton";
 import UnclaimItemButton from "@/components/church/UnclaimItemButton";
 import DeleteItemButton from "@/components/church/DeleteItemButton";
+import { ClaimInfoModal } from "@/components/church/ClaimInfoModal";
+import { MemberOfferToggle } from "@/components/church/MemberOfferToggle";
 
 interface ChurchItemsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -56,21 +58,49 @@ export default async function ChurchItemsPage({
 
   // Build where clause for filtering
   const whereClause: any = {
-    churchId: church.id,
+    OR: [
+      { churchId: church.id }, // Items I posted
+      { claimerId: session.user.id }, // Items I claimed
+    ],
   };
 
   if (statusFilter && statusFilter !== "all") {
-    whereClause.status = statusFilter;
+    whereClause.AND = whereClause.AND || [];
+    whereClause.AND.push({ status: statusFilter });
   }
 
   if (moderationFilter && moderationFilter !== "all") {
-    whereClause.moderationStatus = moderationFilter;
+    whereClause.AND = whereClause.AND || [];
+    whereClause.AND.push({ moderationStatus: moderationFilter });
   }
 
   // Get church items with claimer information including phone
-  const items = await db.item.findMany({
+  const itemsWithClaimingChurchInfo = await db.item.findMany({
     where: whereClause,
-    include: {
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      category: true,
+      status: true,
+      moderationStatus: true,
+      moderationNotes: true,
+      createdAt: true,
+      updatedAt: true,
+      claimedAt: true,
+      claimerId: true,
+      churchId: true,
+      address: true,
+      city: true,
+      state: true,
+      zipCode: true,
+      latitude: true,
+      longitude: true,
+      completedAt: true,
+      // Member offering fields
+      offerToMembers: true,
+      memberDescription: true,
+      // Relations
       claimer: {
         select: {
           id: true,
@@ -80,7 +110,27 @@ export default async function ChurchItemsPage({
           phone: true,
         },
       },
-      // Get the claiming church information for claimed items
+      memberRequests: {
+        where: {
+          status: {
+            in: ["REQUESTED", "RECEIVED"],
+          },
+        },
+        select: {
+          id: true,
+          status: true,
+          requestedAt: true,
+          expiresAt: true,
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
+          },
+        },
+      },
+      // Get the church information for claimed items
       ...(statusFilter === "CLAIMED" || !statusFilter
         ? {
             church: {
@@ -98,8 +148,8 @@ export default async function ChurchItemsPage({
   });
 
   // For claimed items, we need to get the claiming church details
-  const itemsWithClaimingChurchInfo = await Promise.all(
-    items.map(async (item) => {
+  const itemsWithClaimingChurchInfoFinal = await Promise.all(
+    itemsWithClaimingChurchInfo.map(async (item) => {
       if (item.status === "CLAIMED" && item.claimerId) {
         // Get the claiming church information
         const claimingChurch = await db.church.findFirst({
@@ -133,15 +183,25 @@ export default async function ChurchItemsPage({
 
   // Calculate statistics
   const stats = {
-    total: items.length,
-    available: items.filter((item) => item.status === "AVAILABLE").length,
-    claimed: items.filter((item) => item.status === "CLAIMED").length,
-    completed: items.filter((item) => item.status === "COMPLETED").length,
-    approved: items.filter((item) => item.moderationStatus === "APPROVED")
-      .length,
-    pending: items.filter((item) => item.moderationStatus === "PENDING").length,
-    rejected: items.filter((item) => item.moderationStatus === "REJECTED")
-      .length,
+    total: itemsWithClaimingChurchInfoFinal.length,
+    available: itemsWithClaimingChurchInfoFinal.filter(
+      (item) => item.status === "AVAILABLE"
+    ).length,
+    claimed: itemsWithClaimingChurchInfoFinal.filter(
+      (item) => item.status === "CLAIMED"
+    ).length,
+    completed: itemsWithClaimingChurchInfoFinal.filter(
+      (item) => item.status === "COMPLETED"
+    ).length,
+    approved: itemsWithClaimingChurchInfoFinal.filter(
+      (item) => item.moderationStatus === "APPROVED"
+    ).length,
+    pending: itemsWithClaimingChurchInfoFinal.filter(
+      (item) => item.moderationStatus === "PENDING"
+    ).length,
+    rejected: itemsWithClaimingChurchInfoFinal.filter(
+      (item) => item.moderationStatus === "REJECTED"
+    ).length,
   };
 
   return (
@@ -327,7 +387,7 @@ export default async function ChurchItemsPage({
       </Card>
 
       {/* Items List */}
-      {itemsWithClaimingChurchInfo.length === 0 ? (
+      {itemsWithClaimingChurchInfoFinal.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Package className="h-12 w-12 text-muted-foreground mb-4" />
@@ -347,7 +407,7 @@ export default async function ChurchItemsPage({
         </Card>
       ) : (
         <div className="grid gap-6">
-          {itemsWithClaimingChurchInfo.map((item) => (
+          {itemsWithClaimingChurchInfoFinal.map((item) => (
             <Card key={item.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex justify-between items-start gap-6">
@@ -378,6 +438,10 @@ export default async function ChurchItemsPage({
                       >
                         {item.moderationStatus}
                       </Badge>
+                      {/* Claiming Church Badge - Clickable */}
+                      {item.status === "CLAIMED" && item.claimingChurch && (
+                        <ClaimInfoModal item={item} />
+                      )}
                     </div>
 
                     {item.description && (
@@ -419,117 +483,6 @@ export default async function ChurchItemsPage({
                       )}
                   </div>
 
-                  {/* Contact Information Card - Only show if item is claimed */}
-                  {item.status === "CLAIMED" &&
-                    item.claimer &&
-                    item.claimingChurch && (
-                      <div className="w-80">
-                        <Card className="bg-gray-50 border-gray-200">
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-sm font-medium flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-gray-600" />
-                              Claimed by: {item.claimingChurch.name}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="pt-0 space-y-3">
-                            {/* Lead Contact */}
-                            <div>
-                              <h4 className="text-xs font-medium text-gray-700 mb-2">
-                                Lead Contact
-                              </h4>
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2 text-xs">
-                                  <User className="h-3 w-3 text-gray-500" />
-                                  <span>
-                                    {item.claimer.firstName}{" "}
-                                    {item.claimer.lastName}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs">
-                                  <Mail className="h-3 w-3 text-gray-500" />
-                                  <a
-                                    href={`mailto:${item.claimer.email}`}
-                                    className="text-blue-600 hover:underline"
-                                  >
-                                    {item.claimer.email}
-                                  </a>
-                                </div>
-                                {item.claimer.phone && (
-                                  <div className="flex items-center gap-2 text-xs">
-                                    <Phone className="h-3 w-3 text-gray-500" />
-                                    <a
-                                      href={`tel:${item.claimer.phone}`}
-                                      className="text-blue-600 hover:underline"
-                                    >
-                                      {item.claimer.phone}
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Church Info */}
-                            <div className="border-t border-gray-200 pt-2">
-                              <h4 className="text-xs font-medium text-gray-700 mb-2">
-                                Church Details
-                              </h4>
-                              <div className="space-y-1">
-                                <div className="flex items-center gap-2 text-xs">
-                                  <MapPin className="h-3 w-3 text-gray-500" />
-                                  <span className="text-gray-600">
-                                    {item.claimingChurch.city},{" "}
-                                    {item.claimingChurch.state}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs">
-                                  <User className="h-3 w-3 text-gray-500" />
-                                  <span className="text-gray-600">
-                                    Pastor: {item.claimingChurch.leadPastorName}
-                                  </span>
-                                </div>
-                                {item.claimingChurch.website && (
-                                  <div className="flex items-center gap-2 text-xs">
-                                    <span className="text-gray-500">🌐</span>
-                                    <a
-                                      href={item.claimingChurch.website}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="text-blue-600 hover:underline"
-                                    >
-                                      Website
-                                    </a>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {item.claimedAt && (
-                              <div className="border-t border-gray-200 pt-2">
-                                <p className="text-xs text-gray-500">
-                                  Claimed on{" "}
-                                  {item.claimedAt.toLocaleDateString()}
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Action Buttons */}
-                            <div className="border-t border-gray-200 pt-3 flex gap-2">
-                              <CompleteItemButton
-                                itemId={item.id}
-                                itemTitle={item.title}
-                                claimingChurchName={item.claimingChurch.name}
-                              />
-                              <UnclaimItemButton
-                                itemId={item.id}
-                                itemTitle={item.title}
-                                claimingChurchName={item.claimingChurch.name}
-                              />
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )}
-
                   {/* Action Buttons */}
                   <div className="flex flex-col gap-2">
                     <Button asChild variant="outline" size="sm">
@@ -553,6 +506,21 @@ export default async function ChurchItemsPage({
                     />
                   </div>
                 </div>
+
+                {/* Member Offering Toggle - Only for CLAIMED items */}
+                {item.status === "CLAIMED" &&
+                  item.claimerId === session.user.id && (
+                    <div className="mt-4 pt-4 border-t">
+                      <MemberOfferToggle
+                        itemId={item.id}
+                        itemTitle={item.title}
+                        offerToMembers={item.offerToMembers}
+                        memberDescription={item.memberDescription}
+                        activeRequests={item.memberRequests}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
               </CardContent>
             </Card>
           ))}

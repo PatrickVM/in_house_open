@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import VerificationCarousel from "@/components/member/VerificationCarousel";
+import MemberItemCarousel from "@/components/member/MemberItemCarousel";
+import MemberRequestsList from "@/components/member/MemberRequestsList";
 import Link from "next/link";
 import {
   CheckCircle,
@@ -292,6 +294,14 @@ export default async function UserDashboard({
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Member Items Section - Only show for verified church members */}
+          {hasChurch && (
+            <>
+              <MemberItemCarousel data-walkthrough="member-items-carousel" />
+              <MemberRequestsList data-walkthrough="member-requests-list" />
+            </>
           )}
 
           {/* Church Status Card */}

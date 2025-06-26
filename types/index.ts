@@ -7,6 +7,14 @@ export enum ItemStatus {
   COMPLETED = "COMPLETED",
 }
 
+// TypeSafe enum for Member Request Status
+export enum MemberRequestStatus {
+  REQUESTED = "REQUESTED",
+  RECEIVED = "RECEIVED",
+  CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
+}
+
 // TypeSafe enum for User Roles
 export enum UserRole {
   USER = "USER",
@@ -14,14 +22,25 @@ export enum UserRole {
   CHURCH = "CHURCH",
 }
 
-// Extended User type with location fields
-export interface User extends PrismaUser {
+// User type - using Prisma generated type
+export type User = PrismaUser;
+
+// Church type - basic interface for references
+export interface Church {
+  id: string;
+  name: string;
+  leadPastorName: string;
+  website?: string | null;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
   latitude?: number | null;
   longitude?: number | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zipCode?: string | null;
+  applicationStatus: string;
+  leadContactId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Item type
@@ -45,4 +64,25 @@ export interface Item {
   claimerId: string | null;
   owner: User;
   claimer?: User | null;
+  // New fields for member offering
+  offerToMembers: boolean;
+  memberDescription: string | null;
+  // Relations
+  memberRequests?: MemberItemRequest[];
+}
+
+// New MemberItemRequest type
+export interface MemberItemRequest {
+  id: string;
+  itemId: string;
+  userId: string;
+  churchId: string;
+  requestedAt: Date;
+  expiresAt: Date;
+  status: MemberRequestStatus;
+  memberNotes: string | null;
+  // Optional relations
+  item?: Item;
+  user?: User;
+  church?: Church;
 }

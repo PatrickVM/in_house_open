@@ -44,25 +44,55 @@ export default async function ChurchDashboard() {
     pendingItems,
   ] = await Promise.all([
     db.item.count({
-      where: { churchId: church.id },
+      where: {
+        OR: [
+          { churchId: church.id }, // Items I posted
+          { claimerId: session.user.id }, // Items I claimed
+        ],
+      },
     }),
     db.item.count({
-      where: { churchId: church.id, status: "AVAILABLE" },
+      where: {
+        OR: [
+          { churchId: church.id, status: "AVAILABLE" },
+          { claimerId: session.user.id, status: "AVAILABLE" },
+        ],
+      },
     }),
     db.item.count({
-      where: { churchId: church.id, status: "CLAIMED" },
+      where: {
+        OR: [
+          { churchId: church.id, status: "CLAIMED" },
+          { claimerId: session.user.id, status: "CLAIMED" },
+        ],
+      },
     }),
     db.item.count({
-      where: { churchId: church.id, status: "COMPLETED" },
+      where: {
+        OR: [
+          { churchId: church.id, status: "COMPLETED" },
+          { claimerId: session.user.id, status: "COMPLETED" },
+        ],
+      },
     }),
     db.item.count({
-      where: { churchId: church.id, moderationStatus: "PENDING" },
+      where: {
+        OR: [
+          { churchId: church.id, moderationStatus: "PENDING" },
+          { claimerId: session.user.id, moderationStatus: "PENDING" },
+        ],
+      },
     }),
   ]);
 
   // Get recent items
   const recentItems = await db.item.findMany({
-    where: { churchId: church.id },
+    where: {
+      OR: [
+        { churchId: church.id }, // Items I posted
+        { claimerId: session.user.id }, // Items I claimed
+      ],
+    },
     orderBy: { createdAt: "desc" },
     take: 5,
     select: {
