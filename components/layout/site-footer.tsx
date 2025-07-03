@@ -1,8 +1,16 @@
+"use client";
+
 import Link from "next/link";
-import { HomeIcon } from "lucide-react";
+import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { HomeIcon, AlertCircle } from "lucide-react";
 // import { WalkthroughHelpButton } from "@/lib/walkthrough/components/WalkthroughHelpButton";
+import { ReportModal } from "./report-modal";
 
 export function SiteFooter() {
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const { data: session } = useSession();
+
   return (
     <footer className="border-t py-6 md:py-0">
       <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
@@ -19,9 +27,23 @@ export function SiteFooter() {
           >
             Directory
           </Link>
+          {session && (
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="text-sm text-muted-foreground hover:underline underline-offset-4 flex items-center gap-1"
+            >
+              <AlertCircle className="h-3 w-3" />
+              Report
+            </button>
+          )}
           {/* <WalkthroughHelpButton /> */}
         </div>
       </div>
+
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+      />
     </footer>
   );
 }
