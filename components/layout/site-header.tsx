@@ -262,22 +262,6 @@ export function SiteHeader() {
                   </Link>
                 </NavigationMenuItem>
 
-                <NavigationMenuItem>
-                  <Link href="/profile" legacyBehavior passHref>
-                    <NavigationMenuLink
-                      className={cn(
-                        navigationMenuTriggerStyle(),
-                        pathname?.startsWith("/profile") && "text-primary"
-                      )}
-                    >
-                      <span className="flex items-center">
-                        <User2Icon className="mr-2 h-4 w-4" />
-                        Profile
-                      </span>
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-
                 {isAdmin && (
                   <NavigationMenuItem>
                     <Link href="/admin" legacyBehavior passHref>

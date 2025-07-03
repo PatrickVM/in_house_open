@@ -284,14 +284,6 @@ export default async function UserDashboard({
                   You're all ready to go. Your church hasn't posted any daily
                   messages recently.
                 </p>
-                <div className="flex justify-center gap-3">
-                  <Button asChild variant="outline">
-                    <Link href="/directory">
-                      <Users className="w-4 h-4 mr-2" />
-                      Browse Community
-                    </Link>
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           )}
