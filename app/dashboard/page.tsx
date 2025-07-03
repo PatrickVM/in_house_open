@@ -324,13 +324,7 @@ export default async function UserDashboard({
                       Verified
                     </Badge>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href="/directory">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        Browse Items
-                      </Link>
-                    </Button>
+                  <div className="flex justify-center">
                     <Button asChild variant="outline" size="sm">
                       <Link href="/directory">
                         <Users className="w-4 h-4 mr-2" />
