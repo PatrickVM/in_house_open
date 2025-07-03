@@ -146,10 +146,14 @@ export async function POST(request: NextRequest) {
           },
         });
 
+        // Update user status and clear manual church fields
         await tx.user.update({
           where: { id: verificationRequest.userId },
           data: {
             churchMembershipStatus: "REJECTED",
+            // Clear manual church fields since the request was rejected
+            churchName: null,
+            churchWebsite: null,
           },
         });
       });
@@ -208,12 +212,16 @@ export async function POST(request: NextRequest) {
           },
         });
 
+        // Update user with church membership and clean up manual church fields
         await tx.user.update({
           where: { id: verificationRequest.userId },
           data: {
             churchId: verificationRequest.churchId,
             churchMembershipStatus: "VERIFIED",
             verifiedAt: new Date(),
+            // Clear manual church fields since user now has official church relationship
+            churchName: null,
+            churchWebsite: null,
           },
         });
       });
