@@ -278,132 +278,142 @@ export default function MemberRequestsList({
         <CardContent>
           <div className="space-y-4">
             {requests.map((request) => (
-              <div
+              <Card
                 key={request.id}
-                className={`border rounded-lg p-4 space-y-3 ${
-                  request.isExpiringSoon ? "border-red-200 bg-red-50" : ""
+                className={`${
+                  request.isExpiringSoon
+                    ? "border-destructive/50 bg-destructive/5"
+                    : "hover:shadow-md transition-shadow"
                 }`}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-sm">
-                      {request.item.title}
-                    </h4>
-                    {request.item.memberDescription && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {request.item.memberDescription}
-                      </p>
-                    )}
-                  </div>
-                  {getStatusBadge(request)}
-                </div>
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm">
+                          {request.item.title}
+                        </h4>
+                        {request.item.memberDescription && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {request.item.memberDescription}
+                          </p>
+                        )}
+                      </div>
+                      {getStatusBadge(request)}
+                    </div>
 
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span>
-                      {request.daysRemaining > 0
-                        ? `${request.daysRemaining} days left`
-                        : "Expired"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    <span>{formatLocation(request)}</span>
-                  </div>
-                </div>
-
-                {request.memberNotes && (
-                  <div className="text-xs bg-blue-50 border border-blue-200 rounded p-2">
-                    <p className="font-medium text-blue-800">Your Note:</p>
-                    <p className="text-blue-700">{request.memberNotes}</p>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="text-xs text-muted-foreground">
-                    <p>
-                      Contact: {request.item.church.leadContact.firstName}{" "}
-                      {request.item.church.leadContact.lastName}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1">
-                      {request.item.church.leadContact.phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-3 h-3" />
-                          <span>{request.item.church.leadContact.phone}</span>
-                        </div>
-                      )}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
-                        <Mail className="w-3 h-3" />
-                        <span>{request.item.church.leadContact.email}</span>
+                        <Clock className="w-3 h-3" />
+                        <span>
+                          {request.daysRemaining > 0
+                            ? `${request.daysRemaining} days left`
+                            : "Expired"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        <span>{formatLocation(request)}</span>
+                      </div>
+                    </div>
+
+                    {request.memberNotes && (
+                      <div className="text-xs bg-blue-50 border border-blue-200 rounded-md p-3">
+                        <p className="font-medium text-blue-800">Your Note:</p>
+                        <p className="text-blue-700 mt-1">
+                          {request.memberNotes}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-3 border-t">
+                      <div className="text-xs text-muted-foreground">
+                        <p className="font-medium">
+                          Contact: {request.item.church.leadContact.firstName}{" "}
+                          {request.item.church.leadContact.lastName}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          {request.item.church.leadContact.phone && (
+                            <div className="flex items-center gap-1">
+                              <Phone className="w-3 h-3" />
+                              <span>
+                                {request.item.church.leadContact.phone}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            <span>{request.item.church.leadContact.email}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {request.status === "REQUESTED" && (
+                          <>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleMarkReceived(
+                                      request.item.id,
+                                      request.item.title
+                                    )
+                                  }
+                                  disabled={actionLoading === request.item.id}
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Mark as received</p>
+                              </TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleCancelRequest(
+                                      request.item.id,
+                                      request.item.title
+                                    )
+                                  }
+                                  disabled={actionLoading === request.item.id}
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Cancel request</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </>
+                        )}
+
+                        {request.isExpiringSoon &&
+                          request.status === "REQUESTED" && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <AlertTriangle className="w-4 h-4 text-destructive" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  This request expires in{" "}
+                                  {request.daysRemaining} day(s)
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex gap-2">
-                    {request.status === "REQUESTED" && (
-                      <>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleMarkReceived(
-                                  request.item.id,
-                                  request.item.title
-                                )
-                              }
-                              disabled={actionLoading === request.item.id}
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Mark as received</p>
-                          </TooltipContent>
-                        </Tooltip>
-
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handleCancelRequest(
-                                  request.item.id,
-                                  request.item.title
-                                )
-                              }
-                              disabled={actionLoading === request.item.id}
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Cancel request</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </>
-                    )}
-
-                    {request.isExpiringSoon &&
-                      request.status === "REQUESTED" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <AlertTriangle className="w-4 h-4 text-red-500" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>
-                              This request expires in {request.daysRemaining}{" "}
-                              day(s)
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </CardContent>
