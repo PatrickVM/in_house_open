@@ -39,13 +39,16 @@ export async function POST(
       );
     }
 
-    // Find the item and verify it belongs to this church
-    const item = await db.item.findFirst({
-      where: {
-        id,
-        churchId: userChurch.id,
-      },
+    // Find the item - allow claiming church to complete (not just posting church)
+    const item = await db.item.findUnique({
+      where: { id },
       include: {
+        church: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         claimer: {
           select: {
             firstName: true,
@@ -57,9 +60,22 @@ export async function POST(
     });
 
     if (!item) {
+      return NextResponse.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    // Verify user has permission to complete this item
+    // Either: 1) User's church claimed the item, OR 2) User's church posted the item
+    const canComplete =
+      item.claimerId === session.user.id || // Claiming church
+      item.churchId === userChurch.id; // Posting church
+
+    if (!canComplete) {
       return NextResponse.json(
-        { message: "Item not found or unauthorized" },
-        { status: 404 }
+        {
+          message:
+            "Unauthorized - You can only complete items your church claimed or posted",
+        },
+        { status: 403 }
       );
     }
 
@@ -108,12 +124,21 @@ export async function POST(
       },
     });
 
-    // TODO: Enhancement - Add transaction logging for analytics
-    // This should log the completion event with details like:
-    // - ItemId, originChurchId, claimingChurchId
-    // - completedAt timestamp, completedBy (session.user.id)
-    // - transaction type: "ITEM_COMPLETED"
-    // For future analytics dashboard implementation
+    // Log the completion event for admin analytics
+    console.log(`Item completion by church lead`, {
+      itemId: item.id,
+      itemTitle: item.title,
+      completedBy: "CHURCH_LEAD",
+      completedByUserId: session.user.id,
+      completedByChurchId: userChurch.id,
+      completedByChurchName: userChurch.name,
+      originChurchId: item.church.id,
+      originChurchName: item.church.name,
+      claimingChurchId: claimingChurch?.id,
+      claimingChurchName: claimingChurch?.name,
+      completedAt: updatedItem.completedAt,
+      transactionType: "ITEM_COMPLETED_BY_CHURCH",
+    });
 
     return NextResponse.json({
       message: "Item marked as completed successfully",
@@ -124,6 +149,8 @@ export async function POST(
         completedAt: updatedItem.completedAt,
         claimer: updatedItem.claimer,
         claimingChurch: claimingChurch,
+        completedBy: "church",
+        completedByChurchName: userChurch.name,
       },
     });
   } catch (error) {

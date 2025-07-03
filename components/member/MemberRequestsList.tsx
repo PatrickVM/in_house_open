@@ -112,8 +112,8 @@ export default function MemberRequestsList({
       }
 
       toast({
-        title: "Marked as Received",
-        description: `"${itemTitle}" has been marked as received.`,
+        title: "Item Received & Completed",
+        description: `"${itemTitle}" has been marked as received and the transaction is now complete.`,
       });
 
       await fetchRequests();

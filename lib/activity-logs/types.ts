@@ -4,7 +4,8 @@ export type ActivityCategory =
   | "church"
   | "content"
   | "user"
-  | "admin";
+  | "admin"
+  | "member_requests";
 
 export type ActivityAction =
   // Walkthrough actions
@@ -31,7 +32,12 @@ export type ActivityAction =
   | "user_registered"
   | "profile_updated"
   // Admin actions
-  | "admin_action_performed";
+  | "admin_action_performed"
+  // Member request actions
+  | "member_request_created"
+  | "member_request_cancelled"
+  | "member_request_received"
+  | "member_request_expired";
 
 export interface WalkthroughActivityDetails {
   role: "USER" | "CHURCH";
@@ -70,13 +76,26 @@ export interface AdminActivityDetails {
   targetId?: string;
 }
 
+export interface MemberRequestActivityDetails {
+  itemId: string;
+  itemTitle: string;
+  itemCategory: string;
+  churchId: string;
+  churchName: string;
+  requestDuration?: number; // days active before cancellation
+  memberNotes?: string;
+  originalRequestDate?: string;
+  expirationDate?: string;
+}
+
 export type ActivityDetails =
   | WalkthroughActivityDetails
   | InvitationActivityDetails
   | ChurchActivityDetails
   | ContentActivityDetails
   | UserActivityDetails
-  | AdminActivityDetails;
+  | AdminActivityDetails
+  | MemberRequestActivityDetails;
 
 export interface ActivityLogData {
   userId: string;

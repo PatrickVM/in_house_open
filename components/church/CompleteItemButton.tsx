@@ -47,7 +47,20 @@ export default function CompleteItemButton({
         throw new Error(error.message || "Failed to complete item");
       }
 
-      toast.success(`"${itemTitle}" has been marked as completed!`);
+      const data = await response.json();
+
+      // Show success message based on who completed it
+      const completedBy = data.item?.completedBy;
+      const completedByChurchName = data.item?.completedByChurchName;
+
+      if (completedBy === "church" && completedByChurchName) {
+        toast.success(
+          `"${itemTitle}" has been marked as completed by ${completedByChurchName}!`
+        );
+      } else {
+        toast.success(`"${itemTitle}" has been marked as completed!`);
+      }
+
       setIsOpen(false);
       router.refresh(); // Refresh the page to update the UI
     } catch (error) {

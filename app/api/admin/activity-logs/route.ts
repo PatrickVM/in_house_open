@@ -196,6 +196,7 @@ export async function POST(request: NextRequest) {
       "content",
       "user",
       "admin",
+      "member_requests",
     ];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });

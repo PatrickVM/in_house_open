@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 import { db } from "@/lib/db";
+import { ActivityLogService } from "@/lib/activity-logs/service";
 
 export async function POST(
   request: NextRequest,
@@ -159,7 +160,10 @@ export async function DELETE(
       where: { id: session.user.id },
       include: {
         church: {
-          select: { id: true },
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
     });
@@ -176,13 +180,22 @@ export async function DELETE(
       );
     }
 
-    // Find the user's active request for this item
+    // Find the user's active request for this item with item details for logging
     const memberRequest = await db.memberItemRequest.findFirst({
       where: {
         itemId,
         userId: user.id,
         status: {
           in: ["REQUESTED", "RECEIVED"],
+        },
+      },
+      include: {
+        item: {
+          select: {
+            id: true,
+            title: true,
+            category: true,
+          },
         },
       },
     });
@@ -194,10 +207,33 @@ export async function DELETE(
       );
     }
 
-    // Update the request status to cancelled
-    await db.memberItemRequest.update({
+    // Log the cancellation activity before deleting
+    try {
+      const userName =
+        user.firstName && user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : user.email;
+
+      await ActivityLogService.logMemberRequestCancellation(
+        user.id,
+        userName,
+        user.email,
+        memberRequest.item.id,
+        memberRequest.item.title,
+        memberRequest.item.category,
+        user.church.id,
+        user.church.name,
+        memberRequest.requestedAt,
+        memberRequest.memberNotes || undefined
+      );
+    } catch (logError) {
+      console.error("Failed to log member request cancellation:", logError);
+      // Continue with deletion even if logging fails
+    }
+
+    // Delete the request record
+    await db.memberItemRequest.delete({
       where: { id: memberRequest.id },
-      data: { status: "CANCELLED" },
     });
 
     return NextResponse.json({

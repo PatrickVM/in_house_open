@@ -20,7 +20,10 @@ export async function PATCH(
       where: { id: session.user.id },
       include: {
         church: {
-          select: { id: true },
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
     });
@@ -49,8 +52,11 @@ export async function PATCH(
           select: {
             id: true,
             title: true,
+            status: true,
+            claimerId: true,
             church: {
               select: {
+                id: true,
                 name: true,
                 leadContact: {
                   select: {
@@ -73,24 +79,86 @@ export async function PATCH(
       );
     }
 
-    // Update the request status to received
-    const updatedRequest = await db.memberItemRequest.update({
-      where: { id: memberRequest.id },
-      data: { status: "RECEIVED" },
-      include: {
-        item: {
-          select: {
-            id: true,
-            title: true,
+    // Verify the item is still claimed and in the correct state
+    if (memberRequest.item.status !== "CLAIMED") {
+      return NextResponse.json(
+        { message: "Item is no longer available for pickup" },
+        { status: 400 }
+      );
+    }
+
+    // Get the claiming church info for logging
+    const claimingChurch = await db.church.findFirst({
+      where: {
+        leadContactId: memberRequest.item.claimerId!,
+        applicationStatus: "APPROVED",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    // Use transaction to update both member request and item status
+    const result = await db.$transaction(async (tx) => {
+      // Update the request status to received
+      const updatedRequest = await tx.memberItemRequest.update({
+        where: { id: memberRequest.id },
+        data: { status: "RECEIVED" },
+        include: {
+          item: {
+            select: {
+              id: true,
+              title: true,
+            },
           },
         },
-      },
+      });
+
+      // Auto-complete the item when member marks as received
+      const completedItem = await tx.item.update({
+        where: { id: itemId },
+        data: {
+          status: "COMPLETED",
+          completedAt: new Date(),
+        },
+      });
+
+      return { updatedRequest, completedItem };
+    });
+
+    // Log the completion event for admin analytics
+    console.log(`Item completion by member`, {
+      itemId: memberRequest.item.id,
+      itemTitle: memberRequest.item.title,
+      completedBy: "MEMBER",
+      completedByUserId: user.id,
+      completedByUserName:
+        user.firstName && user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : user.email,
+      memberChurchId: user.church.id,
+      memberChurchName: user.church.name,
+      originChurchId: memberRequest.item.church.id,
+      originChurchName: memberRequest.item.church.name,
+      claimingChurchId: claimingChurch?.id,
+      claimingChurchName: claimingChurch?.name,
+      completedAt: result.completedItem.completedAt,
+      transactionType: "ITEM_COMPLETED_BY_MEMBER",
+      memberRequestId: memberRequest.id,
     });
 
     return NextResponse.json({
       success: true,
-      request: updatedRequest,
-      message: "Item marked as received successfully",
+      request: result.updatedRequest,
+      item: {
+        id: result.completedItem.id,
+        status: result.completedItem.status,
+        completedAt: result.completedItem.completedAt,
+        completedBy: "member",
+        completedByChurchName: user.church.name,
+      },
+      message: "Item marked as received and completed successfully",
     });
   } catch (error) {
     console.error("Error marking item as received:", error);

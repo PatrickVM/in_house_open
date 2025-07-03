@@ -6,6 +6,7 @@ import {
   ContentActivityDetails,
   UserActivityDetails,
   AdminActivityDetails,
+  MemberRequestActivityDetails,
 } from "./types";
 import { createActivityLog } from "./db";
 
@@ -190,6 +191,51 @@ export class ActivityLogService {
       userEmail,
       category: "user",
       action: "user_registered",
+      description,
+      details,
+    });
+  }
+
+  /**
+   * Log member request cancellation
+   */
+  static async logMemberRequestCancellation(
+    userId: string,
+    userName: string,
+    userEmail: string,
+    itemId: string,
+    itemTitle: string,
+    itemCategory: string,
+    churchId: string,
+    churchName: string,
+    originalRequestDate: Date,
+    memberNotes?: string
+  ): Promise<void> {
+    const requestDuration = Math.floor(
+      (Date.now() - originalRequestDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    const description = `${userName} cancelled request for "${itemTitle}" (active for ${requestDuration} day${requestDuration !== 1 ? "s" : ""})`;
+
+    const details: MemberRequestActivityDetails = {
+      itemId,
+      itemTitle,
+      itemCategory,
+      churchId,
+      churchName,
+      requestDuration,
+      memberNotes: memberNotes || undefined,
+      originalRequestDate: originalRequestDate.toISOString(),
+      expirationDate: undefined, // Not needed for cancellation
+    };
+
+    return this.logActivity({
+      userId,
+      userRole: "USER",
+      userName,
+      userEmail,
+      category: "member_requests",
+      action: "member_request_cancelled",
       description,
       details,
     });

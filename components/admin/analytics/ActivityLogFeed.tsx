@@ -64,6 +64,11 @@ const getActivityConfig = (category: ActivityCategory): ActivityIconConfig => {
       bgColor: "bg-red-50",
       textColor: "text-red-700",
     },
+    member_requests: {
+      icon: "📦",
+      bgColor: "bg-teal-50",
+      textColor: "text-teal-700",
+    },
   };
 
   return (

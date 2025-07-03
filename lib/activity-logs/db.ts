@@ -33,6 +33,7 @@ export async function createActivityLog(
       "content",
       "user",
       "admin",
+      "member_requests",
     ];
 
     if (!validCategories.includes(data.category)) {
@@ -52,8 +53,10 @@ export async function createActivityLog(
         category: data.category,
         action: data.action,
         description: data.description,
-        details: data.details ? (data.details as Prisma.JsonObject) : null,
-        metadata: data.metadata ? (data.metadata as Prisma.JsonObject) : null,
+        details: data.details ? (data.details as Prisma.JsonObject) : undefined,
+        metadata: data.metadata
+          ? (data.metadata as Prisma.JsonObject)
+          : undefined,
       },
     });
 

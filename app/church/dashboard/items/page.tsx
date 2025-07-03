@@ -150,9 +150,12 @@ export default async function ChurchItemsPage({
   // For claimed items, we need to get the claiming church details
   const itemsWithClaimingChurchInfoFinal = await Promise.all(
     itemsWithClaimingChurchInfo.map(async (item) => {
-      if (item.status === "CLAIMED" && item.claimerId) {
+      let claimingChurch = null;
+      let completionInfo = null;
+
+      if (item.claimerId) {
         // Get the claiming church information
-        const claimingChurch = await db.church.findFirst({
+        claimingChurch = await db.church.findFirst({
           where: {
             leadContactId: item.claimerId,
             applicationStatus: "APPROVED",
@@ -169,14 +172,47 @@ export default async function ChurchItemsPage({
           },
         });
 
-        return {
-          ...item,
-          claimingChurch,
-        };
+        // For completed items, determine completion method
+        if (item.status === "COMPLETED" && item.completedAt) {
+          // Check if there are any member requests that were received
+          const receivedMemberRequest = await db.memberItemRequest.findFirst({
+            where: {
+              itemId: item.id,
+              status: "RECEIVED",
+            },
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          });
+
+          if (receivedMemberRequest) {
+            completionInfo = {
+              type: "member",
+              churchName: claimingChurch?.name || "Unknown Church",
+              memberName:
+                receivedMemberRequest.user.firstName &&
+                receivedMemberRequest.user.lastName
+                  ? `${receivedMemberRequest.user.firstName} ${receivedMemberRequest.user.lastName}`
+                  : "Unknown Member",
+            };
+          } else {
+            completionInfo = {
+              type: "church",
+              churchName: claimingChurch?.name || "Unknown Church",
+            };
+          }
+        }
       }
+
       return {
         ...item,
-        claimingChurch: null,
+        claimingChurch,
+        completionInfo,
       };
     })
   );
@@ -442,6 +478,18 @@ export default async function ChurchItemsPage({
                       {item.status === "CLAIMED" && item.claimingChurch && (
                         <ClaimInfoModal item={item} />
                       )}
+
+                      {/* Completion Info Badge */}
+                      {item.status === "COMPLETED" && item.completionInfo && (
+                        <Badge
+                          variant="outline"
+                          className="text-green-600 border-green-200"
+                        >
+                          {item.completionInfo.type === "member"
+                            ? `Completed by member of ${item.completionInfo.churchName}`
+                            : `Completed by ${item.completionInfo.churchName}`}
+                        </Badge>
+                      )}
                     </div>
 
                     {item.description && (
@@ -468,6 +516,12 @@ export default async function ChurchItemsPage({
                           <User className="w-4 h-4" />
                           Claimed by {item.claimer.firstName}{" "}
                           {item.claimer.lastName}
+                        </div>
+                      )}
+                      {item.status === "COMPLETED" && item.completedAt && (
+                        <div className="flex items-center gap-1">
+                          <CheckCircle className="w-4 h-4" />
+                          Completed on {item.completedAt.toLocaleDateString()}
                         </div>
                       )}
                     </div>

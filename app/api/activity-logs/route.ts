@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       "content",
       "user",
       "admin",
+      "member_requests",
     ];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });
@@ -74,8 +75,8 @@ export async function POST(request: NextRequest) {
           category,
           action,
           description,
-          details: details || undefined,
-          metadata: metadata || undefined,
+          details: details ? (details as any) : undefined,
+          metadata: metadata ? (metadata as any) : undefined,
         },
       });
 
