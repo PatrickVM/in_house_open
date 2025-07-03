@@ -17,27 +17,27 @@ export const metadata: Metadata = {
   // Favicon and icons using HomeIcon design
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/icon.svg", type: "image/svg+xml", sizes: "32x32" },
+      { url: "/homeicon.png", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" }, // Fallback for browsers
     ],
-    shortcut: "/favicon.svg",
-    apple: [{ url: "/icon.svg", sizes: "180x180", type: "image/svg+xml" }],
+    shortcut: "/homeicon.png",
+    apple: [{ url: "/homeicon.png", sizes: "192x192", type: "image/png" }],
   },
 
   // Open Graph for social media sharing
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://your-domain.com", // Update this with your actual domain
+    url: "https://in-house.tech",
     siteName: "In-House",
     title: "In-House - Connect His Church",
     description:
       "Intentionally connecting internally to creatively connect outwardly.",
     images: [
       {
-        url: "/icon.svg",
-        width: 1200,
-        height: 630,
+        url: "/homeicon.png",
+        width: 192,
+        height: 192,
         alt: "In-House - Connect His Church",
       },
     ],
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     title: "In-House - Connect His Church",
     description:
       "Intentionally connecting internally to creatively connect outwardly.",
-    images: ["/icon.svg"],
+    images: ["/homeicon.png"],
     creator: "@cyams34",
   },
 
