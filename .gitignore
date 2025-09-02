@@ -34,3 +34,5 @@ docker-compose.yml
 /postgres-data/
 
 prisma/migrations/.seed.ts
+
+inhouse_app/inhouse_mobile
