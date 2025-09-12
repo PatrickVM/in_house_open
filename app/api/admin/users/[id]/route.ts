@@ -88,11 +88,11 @@ export async function PATCH(
     const { action, role } = await request.json();
 
     // Validate action
-    if (!action || !["activate", "deactivate", "changeRole"].includes(action)) {
+    if (!action || !["activate", "deactivate", "changeRole", "exempt", "remove_exempt", "reactivate"].includes(action)) {
       return NextResponse.json(
         {
           message:
-            "Invalid action. Must be 'activate', 'deactivate', or 'changeRole'",
+            "Invalid action. Must be 'activate', 'deactivate', 'changeRole', 'exempt', 'remove_exempt', or 'reactivate'",
         },
         { status: 400 }
       );
@@ -144,6 +144,14 @@ export async function PATCH(
         );
       }
       updateData.role = role as UserRole;
+    } else if (action === "exempt") {
+      updateData.membershipEnforcementExempt = true;
+    } else if (action === "remove_exempt") {
+      updateData.membershipEnforcementExempt = false;
+    } else if (action === "reactivate") {
+      updateData.isActive = true;
+      updateData.disabledReason = null;
+      updateData.warningEmailSentAt = null;
     }
 
     // Update the user

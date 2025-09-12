@@ -32,6 +32,12 @@ model User {
   inviterId     String?
   isActive      Boolean     @default(true)
   
+  // Church membership enforcement fields
+  membershipEnforcementExempt Boolean   @default(false)
+  membershipDeadlineDate      DateTime?
+  warningEmailSentAt          DateTime?
+  disabledReason              String?
+  
   // Church membership fields
   churchId                    String?
   churchMembershipStatus      ChurchMembershipStatus @default(NONE)
