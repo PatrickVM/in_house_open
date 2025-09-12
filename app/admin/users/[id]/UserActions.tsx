@@ -32,6 +32,9 @@ interface User {
   isActive: boolean;
   firstName?: string | null;
   lastName?: string | null;
+  membershipEnforcementExempt?: boolean;
+  disabledReason?: string | null;
+  churchMembershipStatus?: string;
 }
 
 interface UserActionsProps {

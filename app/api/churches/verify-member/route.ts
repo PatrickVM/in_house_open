@@ -7,6 +7,9 @@ import {
   isUserEligibleToVerify,
   setUserVerifiedAt,
 } from "@/lib/verification-utils";
+import { emailService } from "@/lib/email/email-service";
+import { AccountReactivatedEmail } from "@/lib/email/templates/account-reactivated";
+import { render } from "@react-email/render";
 
 const verifyMemberSchema = z.object({
   requestId: z.string().min(1, "Request ID is required"),
@@ -200,6 +203,13 @@ export async function POST(request: NextRequest) {
       isLeadContact || approvedVerifications >= minRequired;
 
     if (shouldApproveUser) {
+      // Check if account is currently disabled before we update it
+      const userBeforeUpdate = await db.user.findUnique({
+        where: { id: verificationRequest.userId },
+        select: { disabledReason: true }
+      });
+      const wasDisabled = userBeforeUpdate?.disabledReason !== null;
+
       // Add user to church and set verifiedAt timestamp
       await db.$transaction(async (tx) => {
         // Update the original request status
@@ -219,12 +229,37 @@ export async function POST(request: NextRequest) {
             churchId: verificationRequest.churchId,
             churchMembershipStatus: "VERIFIED",
             verifiedAt: new Date(),
+            // Reactivate account if it was disabled
+            isActive: true,
+            disabledReason: null,
+            warningEmailSentAt: null,
             // Clear manual church fields since user now has official church relationship
             churchName: null,
             churchWebsite: null,
           },
         });
       });
+
+      // Send welcome back email if account was previously disabled
+      if (wasDisabled) {
+        try {
+          const welcomeBackEmailHtml = render(AccountReactivatedEmail({
+            firstName: verificationRequest.user.firstName || undefined,
+            churchName: verificationRequest.church.name,
+            loginUrl: `${process.env.NEXTAUTH_URL}/login`,
+          }));
+
+          await emailService.sendEmail({
+            to: verificationRequest.user.email,
+            from: "noreply@inhouse-app.com",
+            subject: "🎉 Welcome Back - Your Account Has Been Reactivated!",
+            html: welcomeBackEmailHtml,
+          });
+        } catch (error) {
+          console.error("Failed to send reactivation email:", error);
+          // Don't fail the verification if email fails
+        }
+      }
 
       return NextResponse.json({
         message: "User has been approved and added to the church",

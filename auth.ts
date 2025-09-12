@@ -43,6 +43,15 @@ export const authOptions = {
             return null;
           }
 
+          // Check if account is disabled
+          if (!user.isActive) {
+            return {
+              error: 'ACCOUNT_DISABLED',
+              reason: user.disabledReason || 'CHURCH_MEMBERSHIP_REQUIRED',
+              email: user.email
+            } as any;
+          }
+
           return {
             id: user.id,
             email: user.email,

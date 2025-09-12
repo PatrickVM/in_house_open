@@ -36,6 +36,16 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
+        // Check for disabled account
+        if (result.error === 'ACCOUNT_DISABLED') {
+          // Redirect to account disabled page with details
+          const params = new URLSearchParams({
+            reason: 'CHURCH_MEMBERSHIP_REQUIRED',
+            email: email
+          });
+          router.push(`/account-disabled?${params.toString()}`);
+          return;
+        }
         toast.error("Login failed. Please check your credentials.");
       } else {
         toast.success("Logged in successfully!");
