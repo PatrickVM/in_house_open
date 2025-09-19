@@ -94,6 +94,18 @@ export const walkthroughSteps: Record<UserRole, WalkthroughStep[]> = {
       },
     },
     {
+      id: "ping-notifications",
+      target: "[data-walkthrough='home-icon-nav']",
+      page: "/dashboard",
+      type: "tooltip",
+      position: "center",
+      content: {
+        en: "Watch for the red outline around the home icon in the top navigation - it indicates when other church members want to connect with you via ping requests!",
+        es: "Observa el contorno rojo alrededor del ícono de inicio en la navegación superior: ¡indica cuando otros miembros de la iglesia quieren conectarse contigo a través de solicitudes de ping!",
+        pt: "Observe o contorno vermelho ao redor do ícone inicial na navegação superior - indica quando outros membros da igreja querem se conectar com você através de solicitações de ping!",
+      },
+    },
+    {
       id: "directory-navigation",
       target: "[data-walkthrough='directory-button']",
       page: "/dashboard",

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import VerificationCarousel from "@/components/member/VerificationCarousel";
 import MemberItemCarousel from "@/components/member/MemberItemCarousel";
 import MemberRequestsList from "@/components/member/MemberRequestsList";
+import PingNotificationBanner from "@/components/ping/PingNotificationBanner";
 import Link from "next/link";
 import {
   CheckCircle,
@@ -181,6 +182,9 @@ export default async function UserDashboard({
           Here's what's happening in your community
         </p>
       </div>
+
+      {/* Ping Notification Banner - Only show for verified church members */}
+      {hasChurch && <PingNotificationBanner />}
 
       {/* Error Message for Map Access Denial */}
       {errorParam === "map_access_denied" && (

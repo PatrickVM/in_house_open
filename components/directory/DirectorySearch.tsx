@@ -1,18 +1,12 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SearchIcon, UserIcon, Church, Users, X } from "lucide-react";
 import Link from "next/link";
+import UserCard from "@/components/directory/UserCard";
 
 /*
  * DIRECTORY SEARCH ENHANCEMENTS - Future Implementation Ideas
@@ -73,6 +67,7 @@ export default function DirectorySearch({
   churchName,
   isVerifiedChurchMember,
 }: DirectorySearchProps) {
+  const { data: session } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter users based on search term
@@ -223,63 +218,12 @@ export default function DirectorySearch({
         /* Users Grid */
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredUsers.map((user) => (
-            <Card key={user.id}>
-              <CardHeader className="pb-3">
-                <CardTitle>
-                  {user.firstName && user.lastName
-                    ? `${user.firstName} ${user.lastName}`
-                    : user.email}
-                </CardTitle>
-                <CardDescription className="flex items-center gap-1">
-                  <Church className="w-3 h-3" />
-                  {churchName} Member
-                  {user.verifiedAt && (
-                    <span className="text-xs">
-                      • Verified{" "}
-                      {new Date(user.verifiedAt).toLocaleDateString()}
-                    </span>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {user.bio && (
-                  <p className="text-sm text-muted-foreground">{user.bio}</p>
-                )}
-
-                {(user.phone || user.email) && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      CONTACT
-                    </p>
-                    <div className="text-sm space-y-1">
-                      {user.phone && <p>{user.phone}</p>}
-                      <p>{user.email}</p>
-                    </div>
-                  </div>
-                )}
-
-                {user.services && (
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      SERVICES & SKILLS
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {user.services
-                        .split(",")
-                        .map((service: string, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {service.trim()}
-                          </Badge>
-                        ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <UserCard
+              key={user.id}
+              user={user}
+              currentUserId={session?.user?.id || ''}
+              churchName={churchName}
+            />
           ))}
         </div>
       )}

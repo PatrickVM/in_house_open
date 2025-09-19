@@ -33,6 +33,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { HomeIconWithPing } from "@/components/ui/home-icon-with-ping";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -112,7 +113,7 @@ export function SiteHeader() {
         <div className="container flex h-16 items-center justify-between px-4">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <HomeIcon className="h-6 w-6" />
+            <HomeIconWithPing className="h-6 w-6" />
             <span className="font-bold">In-House</span>
           </Link>
 
@@ -209,7 +210,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Link href="/" className="flex items-center space-x-2 ml-4">
-          <HomeIcon className="h-6 w-6" />
+          <HomeIconWithPing className="h-6 w-6" />
           <span className="hidden font-bold sm:inline-block">In-House</span>
         </Link>
         <NavigationMenu className="ml-auto">
@@ -255,7 +256,7 @@ export function SiteHeader() {
                       )}
                     >
                       <span className="flex items-center">
-                        <HomeIcon className="mr-2 h-4 w-4" />
+                        <HomeIcon className="mr-2 h-4 w-4" data-walkthrough="home-icon-nav" />
                         Dashboard
                       </span>
                     </NavigationMenuLink>

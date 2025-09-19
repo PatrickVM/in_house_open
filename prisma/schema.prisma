@@ -76,6 +76,12 @@ model User {
   
   // New relation for member item requests
   itemRequests            MemberItemRequest[] @relation("UserItemRequests")
+  
+  // Ping system relations
+  sentPings               Ping[]              @relation("SentPings")
+  receivedPings           Ping[]              @relation("ReceivedPings")
+  pingPreferences         PingPreferences?
+  fcmTokens               FCMToken[]
 }
 
 model Account {
@@ -515,5 +521,55 @@ enum MemberRequestStatus {
   REQUESTED
   RECEIVED
   CANCELLED
+  EXPIRED
+}
+
+model Ping {
+  id          String      @id @default(cuid())
+  senderId    String      // User who sent the ping
+  receiverId  String      // User who received the ping
+  status      PingStatus  @default(PENDING)
+  message     String?     // Optional ping message
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  expiresAt   DateTime    // Auto-reject after 7 days
+  
+  sender      User        @relation("SentPings", fields: [senderId], references: [id])
+  receiver    User        @relation("ReceivedPings", fields: [receiverId], references: [id])
+  
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+  @@index([senderId, status])
+}
+
+model PingPreferences {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  autoAccept            Boolean @default(false)
+  autoReject            Boolean @default(false)
+  allowPingsFromAnyone  Boolean @default(true)
+  dailyPingLimit        Int     @default(10)
+  
+  user                  User    @relation(fields: [userId], references: [id])
+}
+
+model FCMToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  device    String?  // web, android, ios
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  lastUsed  DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@index([userId])
+}
+
+enum PingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
   EXPIRED
 }

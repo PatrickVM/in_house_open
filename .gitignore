@@ -19,6 +19,9 @@ yarn-error.log*
 # env files
 .env*
 
+# generated firebase service worker (built from template)
+public/firebase-messaging-sw.js
+
 # vercel
 .vercel
 

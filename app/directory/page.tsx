@@ -1,5 +1,6 @@
 import { authOptions } from "@/auth";
 import DirectorySearch from "@/components/directory/DirectorySearch";
+import PingNotificationBanner from "@/components/ping/PingNotificationBanner";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
@@ -102,6 +103,9 @@ export default async function DirectoryPage() {
           </p>
         </div>
       </div>
+
+      {/* Show ping notification banner for authenticated users */}
+      {isVerifiedChurchMember && <PingNotificationBanner />}
 
       <DirectorySearch
         initialUsers={completedUsers}
