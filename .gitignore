@@ -39,3 +39,5 @@ docker-compose.yml
 prisma/migrations/.seed.ts
 
 inhouse_app/inhouse_mobile
+
+/documentation
