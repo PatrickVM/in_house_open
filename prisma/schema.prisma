@@ -37,7 +37,11 @@ model User {
   membershipDeadlineDate      DateTime?
   warningEmailSentAt          DateTime?
   disabledReason              String?
-  
+
+  // Password reset fields
+  resetToken                  String?   @unique
+  resetTokenExpiry            DateTime?
+
   // Church membership fields
   churchId                    String?
   churchMembershipStatus      ChurchMembershipStatus @default(NONE)
