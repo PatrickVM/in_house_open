@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
       : undefined;
 
     // Render email HTML
-    const emailHtml = render(
+    const emailHtml = await render(
       PasswordResetEmail({
         userName,
         resetUrl,
